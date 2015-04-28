@@ -1,0 +1,9 @@
+命令默认执行的是bin目录的？
+sudo su or su vinyin(用户名)//切换用户
+lsb_release -a //查看版本信息
+uname -a //查看内核版本
+mkdir dirname//新建目录
+rm delName// 删掉delName
+gcc -o 生成二制名 源文件//编译源文件
+./生成二制名 //执行生成的文件
+g++ -E prepro.cpp//预编译 处理include #ifndef 等问题 
