@@ -1,4 +1,5 @@
 命令默认执行的是bin目录的？
+/表示根目录 ./表示当前目录 ../上级目录
 sudo su or su vinyin(用户名)//切换用户
 lsb_release -a //查看版本信息
 uname -a //查看内核版本
@@ -7,3 +8,10 @@ rm delName// 删掉delName
 gcc -o 生成二制名 源文件//编译源文件
 ./生成二制名 //执行生成的文件
 g++ -E prepro.cpp//预编译 处理include #ifndef 等问题 
+gedit Makefile//打开Makefile文件 并可以编辑
+reboot //重启
+chmod 777 m1000//修改权限 读 写 执行
+unzip filename.zip//解压出来的文件在目录filename下了
+mv 目录名/*.bmp ./ //将目录名下面的所有bmp格式剪切到当前目录下
+rm -rf 目录名      //删除一个目录
+rm 文件名          //删除一个文件
