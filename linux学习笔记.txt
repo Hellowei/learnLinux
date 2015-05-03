@@ -21,3 +21,35 @@ rm 文件名          //删除一个文件
 对于大文件 sz rz命令是灾难性的，速度太慢了，那么可用以下
 tftp -l /m1000/4.txt -r 4.txt -p 192.168.1.209 //从本地.1.209得到4.txt文件并保存到/m1000/4.txt
 tftp -l /m1000/4.txt -r 4.txt -g 192.168.1.209 //从远程下载/m1000/4.txt到本地.1.209并保存为4.txt
+
+	目录结构
+/bin 存放常用命令 这个是bin是二制的意思，可执行？
+/boot 存放系统启动时一些程序 叫自启程序可好？
+/dev 存放的是外设 可访问这些外设的端口，如查看光驱文件 cd/dev/cdrom 查看鼠标相关文件cd/dev/mouse
+/cdrom 系统光驱 故刚刚装完系统是空的，可把mount /dev/cdrom /cdrom
+/etc 存放操作系统的各项管理信息 如网络配置 用户信息等
+/sbin 用户的程序，有点像bin 但那个是系统的，这个是用户的
+/home 用来存放用户的主目录，如创建了用户vinyin 那就有个/home/vinyin 用来存放vinyin的主目录
+/lib  系统的共享动态程序库
+/lost+found 一般这目录是空的，系统异常后可从这找回丢失的文件 如那天系统断电 可能这里就会有些东东了
+/mnt  目录一般也是空的，你可将一些临时文件系统挂载到这 
+/proc 系统自己产出的一些信息
+/root 超级用户的主目录 类似/home/vinyin
+/tmp  程序运行产生的临时文件
+/usr  用户的一些程序及文件
+ 
+命令篇 
+ls 看当前的目录结构 默认打开终端的时候，当前路径是在主目录的，就是如果是超级用户那就是/root  vinyin 那就是/vinyin
+ls -A 查看所有当前目录所有的文件 包括隐藏的文件（隐藏的文件以.开头的，如.unvisable）
+ls -l 查看文件的具体信息 ls --color彩显 如可执行文件是green 目录是blue
+
+cd / 进入了根目录  cd /usr  进入根目录下的usr  cd 回到系统默认登录的目录， mkdir dirName 建目录 rm fileName 删文件
+rm dir -rf删含文件的目录 	
+vi filename nano fileName都可以编辑文件 cat fileName more fileName 都可以查看文件
+halt reboot 关机或重启
+mount /dev/cdrom /mnt/cdrom 把光驱挂载到/mnt/cdrom下 umount /dev/cdrom umount /mnt/cdrom都是取消之前的挂载，一样的
+管道命令
+> >> | 前两个都是内容写到某文件，最后一个是把前面的内容当作后面命令的输入数据 ls -A >> filename.txt
+cat >> friends << "EOF" 把输入内容保存到文件friends上，直到输入EOF为止	
+lynx http://www.baidu.com 上网 
+没取消软盘的挂载可能丢失数据，因为操作系统用的是系统空闲或缓冲满才进行写盘操作，所以没取消挂载，可能导致数据还在缓冲池
