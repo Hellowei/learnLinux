@@ -1,0 +1,172 @@
+//fischer评分方法 @vinyin 2015-05-04
+static VOID DispAnalysisFischer(HDC hdc, PRECT prc, ARET_SAVE *pRet)
+{
+	INT32 x = prc->left + DLG_OFFSET;
+	INT32 y = prc->top + DLG_OFFSET;
+	INT32 y1;
+	UCHAR txt[64];
+	RECT rc;
+	
+	SetTextColor(hdc, GetWindowElementColor (FGC_CONTROL_DEF));
+	SetPenColor(hdc, GetWindowElementColor (FGC_CONTROL_DEF));
+	//
+	Rect(hdc, x, y, x + 80 * 5, y + KEY_HEIGHT * 6+KEY_HEIGHT*1.8);
+	
+	Line(hdc, x, y + KEY_HEIGHT * 1+KEY_HEIGHT*0.3*1, x + 80 * 5, y + KEY_HEIGHT * 1+KEY_HEIGHT*0.3*1);
+	Line(hdc, x, y + KEY_HEIGHT * 2+KEY_HEIGHT*0.3*2, x + 80 * 5, y + KEY_HEIGHT * 2+KEY_HEIGHT*0.3*2);
+	Line(hdc, x, y + KEY_HEIGHT * 3+KEY_HEIGHT*0.3*3, x + 80 * 5, y + KEY_HEIGHT * 3+KEY_HEIGHT*0.3*3);
+	Line(hdc, x, y + KEY_HEIGHT * 4+KEY_HEIGHT*0.3*4, x + 80 * 5, y + KEY_HEIGHT * 4+KEY_HEIGHT*0.3*4);
+	Line(hdc, x, y + KEY_HEIGHT * 5+KEY_HEIGHT*0.3*5, x + 80 * 5, y + KEY_HEIGHT * 5+KEY_HEIGHT*0.3*5);
+
+	Line(hdc, x +  120+70*0, y, x +  120+70*0, y + KEY_HEIGHT * 6+KEY_HEIGHT*1.8);
+	Line(hdc, x +  120+70*1, y, x +  120+70*1, y + KEY_HEIGHT * 6+KEY_HEIGHT*1.8);
+	Line(hdc, x +  120+70*2, y, x +  120+70*2, y + KEY_HEIGHT * 6+KEY_HEIGHT*1.8);
+	Line(hdc, x +  120+70*3, y, x +  120+70*3, y + KEY_HEIGHT * 6+KEY_HEIGHT*1.8);
+	//从上到下是 项目 胎心率基线 振幅变异 周期变异  加速 减速
+	SetRect(&rc, x, y , x + 120, y + KEY_HEIGHT);
+	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_ITEMS));
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	SetRect(&rc, x, y + KEY_HEIGHT * 1+KEY_HEIGHT*0.3*1, x + 120, y + KEY_HEIGHT * 2+KEY_HEIGHT*0.3*1);
+	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_BASE_LINE));
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	int count = 0;
+	printf("count=%d ,str = %s \n",count++,txt);
+	SetRect(&rc, x, y + KEY_HEIGHT * 2+KEY_HEIGHT*0.3*2, x + 120, y + KEY_HEIGHT * 3+KEY_HEIGHT*0.3*2);
+	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_AMPLITUDE_VAR));
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	printf("count=%d ,str = %s \n",count++,txt);
+	SetRect(&rc, x, y + KEY_HEIGHT * 3+KEY_HEIGHT*0.3*3, x + 120, y + KEY_HEIGHT * 4+KEY_HEIGHT*0.3*3);
+	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_PERIOD_VAR));
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	printf("count=%d ,str = %s \n",count++,txt);
+	SetRect(&rc, x, y + KEY_HEIGHT * 4+KEY_HEIGHT*0.3*4, x + 120, y + KEY_HEIGHT * 5+KEY_HEIGHT*0.3*4);
+	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_ACCELRATION));
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	printf("count=%d ,str = %s \n",count++,txt);
+	SetRect(&rc, x, y + KEY_HEIGHT * 5+KEY_HEIGHT*0.3*5, x + 120, y + KEY_HEIGHT * 6+KEY_HEIGHT*0.3*5);
+	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_SLOWDOWN));
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	//从上到下是 0分  <100,>180   <5   <2   无   LD,重度VD
+	x += 120;
+	SetRect(&rc, x, y , x + 70, y + KEY_HEIGHT);
+	sprintf(txt, "0");
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	SetRect(&rc, x, y + KEY_HEIGHT * 1+KEY_HEIGHT*0.3*1, x + 70, y + KEY_HEIGHT * 2+KEY_HEIGHT*0.3*1);
+	sprintf(txt, "<100,>180");
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	SetRect(&rc, x, y + KEY_HEIGHT * 2+KEY_HEIGHT*0.3*2, x + 70, y + KEY_HEIGHT * 3+KEY_HEIGHT*0.3*2);
+	sprintf(txt, "<5");
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	SetRect(&rc, x, y + KEY_HEIGHT * 3+KEY_HEIGHT*0.3*3, x + 70, y + KEY_HEIGHT * 4+KEY_HEIGHT*0.3*3);
+	sprintf(txt, "<2");
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	SetRect(&rc, x, y + KEY_HEIGHT * 4+KEY_HEIGHT*0.3*4, x + 70, y + KEY_HEIGHT * 5+KEY_HEIGHT*0.3*4);
+	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_ACCELRATION_TYPE0));
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	SetRect(&rc, x, y + KEY_HEIGHT * 5+KEY_HEIGHT*0.3*5, x + 70, y + KEY_HEIGHT * 6+KEY_HEIGHT*0.3*5);
+	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_SLOWDOWN_TYPE0));
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	//从上到下是 1分  100~119 161~180   5~10,>30   2~6   周期性   轻度VD
+	x += 70;
+	SetRect(&rc, x, y , x + 70, y + KEY_HEIGHT);
+	sprintf(txt, "1");
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	SetRect(&rc, x + 4, y + KEY_HEIGHT * 1 + 2+KEY_HEIGHT*0.3*1, x + 70 - 4, y + KEY_HEIGHT * 2+KEY_HEIGHT*0.25*1);
+	sprintf(txt, "100~119,161~180");
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	SetRect(&rc, x, y + KEY_HEIGHT * 2+KEY_HEIGHT*0.3*2, x + 70, y + KEY_HEIGHT * 3+KEY_HEIGHT*0.3*2);
+	sprintf(txt, " 5~10,>30");
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	SetRect(&rc, x, y + KEY_HEIGHT * 3+KEY_HEIGHT*0.3*3, x + 70, y + KEY_HEIGHT * 4+KEY_HEIGHT*0.3*3);
+	sprintf(txt, "2~6");
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	SetRect(&rc, x, y + KEY_HEIGHT * 4+KEY_HEIGHT*0.3*4, x + 70, y + KEY_HEIGHT * 5+KEY_HEIGHT*0.3*4);
+	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_ACCELRATION_TYPE1));
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	SetRect(&rc, x, y + KEY_HEIGHT * 5+KEY_HEIGHT*0.3*5, x + 70, y + KEY_HEIGHT * 6+KEY_HEIGHT*0.3*5);
+	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_SLOWDOWN_TYPE1));
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	//从上到下是 2分  120~160   10~30   >6   非周期性   无\ntype-O-dip散发
+	x += 70;
+	SetRect(&rc, x, y , x + 70, y + KEY_HEIGHT);
+	sprintf(txt, "2");
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	SetRect(&rc, x, y + KEY_HEIGHT * 1+KEY_HEIGHT*0.3*1, x + 70, y + KEY_HEIGHT * 2+KEY_HEIGHT*0.3*1);
+	sprintf(txt, "120-160");
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	SetRect(&rc, x, y + KEY_HEIGHT * 2+KEY_HEIGHT*0.3*2, x + 70, y + KEY_HEIGHT * 3+KEY_HEIGHT*0.3*2);
+	sprintf(txt, "10-30");
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	SetRect(&rc, x, y + KEY_HEIGHT * 3+KEY_HEIGHT*0.3*3, x + 70, y + KEY_HEIGHT * 4+KEY_HEIGHT*0.3*3);
+	sprintf(txt, ">6");
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	SetRect(&rc, x, y + KEY_HEIGHT * 4+KEY_HEIGHT*0.3*4, x + 70, y + KEY_HEIGHT * 5+KEY_HEIGHT*0.3*4);
+	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_ACCELRATION_TYPE2));
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	SetRect(&rc, x, y + KEY_HEIGHT * 5+KEY_HEIGHT*0.3*5, x + 70, y + KEY_HEIGHT * 6+KEY_HEIGHT*0.3*5);
+	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_SLOWDOWN_TYPE2));
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	//从上到下是 本例结果  实际的分数1 分数2 分数3 分数4 分数5
+	x += 70;
+	SetRect(&rc, x, y , x + 70, y + KEY_HEIGHT);
+	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_RESULT));
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	SetRect(&rc, x, y + KEY_HEIGHT * 1+KEY_HEIGHT*0.3*1, x + 70, y + KEY_HEIGHT * 2+KEY_HEIGHT*0.3*1);
+	if (pRet->fhr_JX)
+		sprintf(txt, "%d", pRet->fhr_JX);
+	else
+		strcpy(txt, "--");
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	SetRect(&rc, x, y + KEY_HEIGHT * 2+KEY_HEIGHT*0.3*2, x + 70, y + KEY_HEIGHT * 3+KEY_HEIGHT*0.3*2);
+	if (pRet->fhr_ZV)
+		sprintf(txt, "%d", pRet->fhr_ZV);
+	else
+		strcpy(txt, "--");
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	SetRect(&rc, x, y + KEY_HEIGHT * 3+KEY_HEIGHT*0.3*3, x + 70, y + KEY_HEIGHT * 4+KEY_HEIGHT*0.3*3);
+	if (pRet->fasttime)
+		sprintf(txt, "%d", pRet->fasttime);
+	else
+		strcpy(txt, "--");
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	SetRect(&rc, x, y + KEY_HEIGHT * 4+KEY_HEIGHT*0.3*4, x + 70, y + KEY_HEIGHT * 5+KEY_HEIGHT*0.3*4);
+	if (pRet->fasthigh)
+		sprintf(txt, "%d", pRet->fasthigh);
+	else
+		strcpy(txt, "--");
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	SetRect(&rc, x, y + KEY_HEIGHT * 5+KEY_HEIGHT*0.3*5, x + 70, y + KEY_HEIGHT * 6+KEY_HEIGHT*0.3*5);
+	if (pRet->fm_nr)
+		sprintf(txt, "%d", pRet->fm_nr);
+	else
+		strcpy(txt, "--");
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	//从上到下是 FISCHER评分方法 监测时间 有效数据 开始时间 结束时间
+	x += 88;
+	y1 = y + 8;
+	y += KEY_HEIGHT * 6 + DLG_OFFSET;
+	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_FISCHER));
+	TextOut(hdc, x, y1, txt);
+	y1 += STATIC_HEIGHT;
+	sprintf(txt, "%s %d:%02d", LoadString(STR_DLG_ANLS_TIME),
+		pRet->second / 60, pRet->second % 60);
+	TextOut(hdc, x, y1, txt);
+	y1 += STATIC_HEIGHT;
+	sprintf(txt, "%s   %d%%", LoadString(STR_DLG_ANLS_VALID), pRet->vld_pct);
+	TextOut(hdc, x, y1, txt);
+	y1 += STATIC_HEIGHT;
+	
+	struct tm *plocal_time;
+	UINT32 time = pRet->endtime - pRet->second;
+	plocal_time = localtime((const time_t *)&time);
+	sprintf(txt, "%s: %02d:%02d:%02d", LoadString(STR_PRINT_TIME_START), 
+		plocal_time->tm_hour, plocal_time->tm_min, plocal_time->tm_sec);
+	TextOut(hdc, x, y1, txt);
+	y1 += STATIC_HEIGHT;
+	
+	plocal_time = localtime((const time_t *)&(pRet->endtime));
+	sprintf(txt, "%s: %02d:%02d:%02d", LoadString(STR_PRINT_TIME_END), 
+		plocal_time->tm_hour, plocal_time->tm_min, plocal_time->tm_sec);
+	TextOut(hdc, x, y1, txt);
+	
+}
