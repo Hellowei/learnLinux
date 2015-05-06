@@ -53,3 +53,5 @@ mount /dev/cdrom /mnt/cdrom 把光驱挂载到/mnt/cdrom下 umount /dev/cdrom umount /m
 cat >> friends << "EOF" 把输入内容保存到文件friends上，直到输入EOF为止	
 lynx http://www.baidu.com 上网 
 没取消软盘的挂载可能丢失数据，因为操作系统用的是系统空闲或缓冲满才进行写盘操作，所以没取消挂载，可能导致数据还在缓冲池
+tar xf + 压缩的文件名 //可解压到当前目录
+tar cvf 压缩包名 目录名 //可压缩
