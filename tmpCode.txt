@@ -171,7 +171,6 @@ static VOID DispAnalysisFischer(HDC hdc, PRECT prc, ARET_SAVE *pRet)
 	
 }
 
-
 //tober评分方法 @vinyin 2015-05-05
 static VOID DispAnalysisTorbe(HDC hdc, PRECT prc, ARET_SAVE *pRet)
 {
