@@ -23,7 +23,7 @@ static VOID DisplayAlmInfo(HDC hdc, PALMLIST pInfo, INT16 index)
 	INT16 id;
 	INT16 ndx;
 	//CHAR  szInfo[32];//如果报警信息长度大于26字节，需增大数组
-	CHAR  szInfo[64];//添加俄语后增大数组长度，panhonghui
+	CHAR  szInfo[64]={0};//添加俄语后增大数组长度，panhonghui
 
 	CHAR  szDate[12];
 	CHAR  szTime[12];
@@ -45,7 +45,7 @@ static VOID DisplayAlmInfo(HDC hdc, PALMLIST pInfo, INT16 index)
 		ndx = pInfo->index - id;
 		if (ndx <= 0)
 			ndx += ALARM_INFO_LIST_MAX;
-		sprintf(szInfo, "%03d. %s", ndx, LoadString(pInfo->info[id].id));
+		snprintf(szInfo,sizeof(szInfo)-1, "%03d. %s", ndx, LoadString(pInfo->info[id].id));
 		TextOut(hdc, 1, offset + i * STATIC_HEIGHT, szInfo);
 	}
 	pdc->pLogFont = GetSystemFont(SYSLOGFONT_DEFAULT);

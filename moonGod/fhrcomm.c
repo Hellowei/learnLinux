@@ -169,7 +169,7 @@ static BOOL CalcAutoFmFalgProc(VOID)
 *****************************************************************************************/
 static VOID DealWithGetFmFlag(UINT8 flag)
 {
-    static UINT8 manualCnt = 10;
+    static UINT8 manualCnt = 5;
     static UINT8 autoCnt = 10;
     
     BOOL afm;
@@ -177,7 +177,7 @@ static VOID DealWithGetFmFlag(UINT8 flag)
     
     if (MonitorInfo.inDemo)
     {
-        manualCnt = 10;
+        manualCnt = 5;
         autoCnt = 10;
         return;
     }
@@ -346,13 +346,6 @@ VOID FetalPacketFound(PACKETFRAME *pack)
 {
     if (pack->frame.id == FETAL_MODULE_ID)
     {
-//        static int st=0;
-//        st++;
-//        printf("st=%d    ",st);
-//        if(st%2)
-//            return;
-//        if (st = !st)
-//            return
         UCHAR status1 = 0;
         UCHAR status2 = 0;
         FhrParams.fhr1 = pack->frame.data[1];
@@ -365,22 +358,15 @@ VOID FetalPacketFound(PACKETFRAME *pack)
         FhrParams.signal = status1;
         
         int second=time((time_t *)NULL);
-
-//        printf("fhr1=0x%02x,fhr2=0x%02x,",FhrParams.fhr1,FhrParams.fhr2);
-//        printf("toco=0x%02x,status1=0x%02x,status2=0x%02x\n",FhrParams.toco,status2);
-
-        
-//        FhrParams.fhr1 = 166;
-//        FhrParams.fhr1 = 20 + (DateTime.second % 20);
-
-
         DealWithGetFmFlag(status1);
         FetalAnalysisPutValue(&FhrParams);
         PutFhrValue(&FhrParams);// 设计收包频率是4Hz,模块实际发包频率是2Hz
         if (status2 & 0x40)
         {
             FhrParams.mark |= 0x02;
+            
         }
+     
 		PutFhrValue(&FhrParams);// 增加一次数据保存
 		if (MonitorInfo.inDemo == FALSE)
 	        PutFhrStatusByte(status1, status2);

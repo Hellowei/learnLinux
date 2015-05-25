@@ -80,7 +80,11 @@ typedef struct __analysis_result_save{
 	int fasthigh;	//加速时上升幅度
 	int tdfast;	  //心率加速次数
 	int tdslow;	  //心率减速次数
-
+	int fastType;		//加速类型
+	int slowType;		//减速类型
+	int LDTime;			//晚期减速
+	int EDTime;			//早期减速
+	int VDTime;			//vd数
 	UINT32  endtime;
 	UINT32  second;
 }ARET_SAVE;

@@ -1149,16 +1149,16 @@ VOID PrintCurTime (PRECEVENTCLASS this)
 	INT32  start_x;
 	INT32  y_pos;
 	PLOGFONT pFont;
+	memset(buff, 0, sizeof(buff));
 	if (this->semaphore)
 	{
-		GET_RECSTARTUP_PERMIT();
+
+		GET_RECSTARTUP_PERMIT();	
 		this->semaphore = FALSE;
 		RELEASE_STARTUP_PERMIT();
-
 		//确保打印机已经关闭
-		ms_sleep(RECORD_DELAYTICKS);
+		//ms_sleep(RECORD_DELAYTICKS);
 	}
-
 	sprintf(buff, "%02d:%02d", DateTime.hour, DateTime.minute);	
  	y_pos = RecConfig.regStar[PAPER_REG_FHR] + 2;
 	pFont = (PLOGFONT)this->pRecClass->font_normal;
@@ -1170,6 +1170,7 @@ VOID PrintCurTime (PRECEVENTCLASS this)
 	GET_RECSTARTUP_PERMIT();
 	this->semaphore = TRUE;
 	RELEASE_STARTUP_PERMIT();
+
 }
 
 
@@ -1244,14 +1245,17 @@ VOID RecFhrElapseOneSec (VOID)
 	RecFHRControl.elapseSec ++;
 	if (RecFHRControl.periodTime > 0) // 定时打印
 	{
+
 //		prinfo("RecGetReadIndex...%d, RecFHRControl.elapseSec...%d\r\n",
 //			this->pRecClass->RecGraphInfo.readIndex, RecFHRControl.elapseSec);
 		if (RecFHRControl.elapseSec >= RecFHRControl.periodTime)
 		{
+
 			RecFHRControl.timeover = TRUE;
 		}  	
 		if (RecFHRControl.timeover)
 		{
+
 			RecGetFetalParamEnd ();
 			PrintFetalParamEnd (this);
 			RecFetalEnd (this);
@@ -1261,10 +1265,13 @@ VOID RecFhrElapseOneSec (VOID)
 	if ((RecFHRControl.elapseSec % 60) == 5)
 //		% (60 * RecFHRControl.recRate / FETAL_SAMPLE_RATE) == 5)
 	{
+
 		PrintCurTime (this);
 	}
 	if (RecFHRControl.elapseSec > 180 * 10,000,000)//保证在回绕的时候不会出现问题
-		RecFHRControl.elapseSec = RecFHRControl.periodTime;
+    {
+        RecFHRControl.elapseSec = RecFHRControl.periodTime;
+    }
 }
 
 

@@ -653,7 +653,7 @@ VOID  TskSysTimer (VOID *pdata)
 		{
 			_on_ctrl();
 		}
-		if (time_count % 10 == 1)
+		if (time_count % 2 == 1)
 		{			
 			FhrDrawWave();
 		}

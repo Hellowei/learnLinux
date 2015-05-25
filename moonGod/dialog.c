@@ -692,10 +692,8 @@ VOID GUIAPI CheckDlgButton (HWND hDlg, INT32 nIDDlgItem, INT32 nCheck)
 {
 	HWND hCtrl;
 	long DlgCode;
-
 	if (!(hCtrl = GetDlgItem (hDlg, nIDDlgItem)))
 		return;
-
 	DlgCode = SendMessage (hCtrl, MSG_GETDLGCODE, 0, 0);
 
 	if (DlgCode & DLGC_BUTTON) {

@@ -99,6 +99,7 @@ const static CHAR cszConfKey[CFG_KEYID_MAX][32] = {
 	,"TouchScaleX"
 	,"TouchScaleY"
 	,"LowCost"
+	,"DefaultAnalyType"//用户保存的评分设置默认值
 };
 
 static int siKeyLen[CFG_KEYID_MAX];
@@ -690,7 +691,7 @@ int PushStrKeyValue(const CHAR *key, const CHAR *value)
 	
 	if (MemTail < Mem_Map + strlen((char*)Mem_Map) + strlen((char*)value))
 		return -1;
-	
+	//printf("setvalue key value %s %s\n",key,value);
 	strcpy((char*)buff, (char*)key);
 	strcat((char*)buff, "=");
 	if (NULL != (p = (UCHAR*)strstr((char*)Mem_Map, (char*)buff)))
@@ -929,6 +930,11 @@ STATUS PutConfigKeyValue2(CFG_KEYID keyID, UINT8 *value)
 			ret = GetIntegerKeyValue(value);
 			if (ret < 0 || ret > 2) ret = 0;
 			FhrConfig.sweep = ret;
+			break;
+		case CFG_KEYID_DEFAULTANALYTYPE://用户保存的评分设置默认值:
+			ret = GetIntegerKeyValue(value);
+			printf("读出默认值defaultAnalyType=%d \n",ret);
+			FhrConfig.defaultAnalyType = ret?ret:1;//没有默认值设为NST评分法
 			break;
 
 		case CFG_KEYID_PRINTDETACH:
@@ -1182,6 +1188,12 @@ VOID Save_Config2 (INT16 cfg_kid)
 	}
 	switch(cfg_kid)
 	{
+		case CFG_KEYID_DEFAULTANALYTYPE://用户默认的评分方法在这里保存
+			sprintf(value, "%d",FhrConfig.defaultAnalyType);
+			
+			printf("这里存%s FhrConfig.defaultAnalyType=%d\n",value,FhrConfig.defaultAnalyType);
+			PushStrKeyValue(cszConfKey[CFG_KEYID_DEFAULTANALYTYPE], value);
+			if (flag) break;
 		case CFG_KEYID_MONITORTYPE:
 			strcpy(value, MonitorLocalName[MonitorConfig.MonitorName & 0x01]);
 			SetMachineName(value);

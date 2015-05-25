@@ -24,11 +24,12 @@ static BITMAPMEM RecallAnalyGphMem = {0, 0, 0L, 0L, NULL};
 static PTRPARIENT RecallPatientPtr = NULL;
 static UINT8 RecallInfoFlag;
 static UINT8 RecallAnalyFlag;
+static INT s_lastChoseGrade;//缓存用户上次默认评分法
 static UCHAR InfoText[14][40];
 static INT8 RecallPage;
 static INT8 MaxRecallPage;
 static INT32 PageIndex[RECALL_PAGE_MAX_NUMBER];
-
+static HWND hStaticWnd1,hStaticBut1,hStaticBut2;
 static VOID InitFetalRecallBmpMem(ICONID icon, PBITMAPMEM pBmpMem)
 {
 	PFBMEM  this = &FbMem;
@@ -428,28 +429,22 @@ static VOID DispAnalysis(HDC hdc, PRECT prc, ARET_SAVE *pRet)
 
 	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_ITEMS));
 	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
-	int count = 0;
-	printf("count=%d ,str = %s \n",count++,txt);
 	SetRect(&rc, x, y + KEY_HEIGHT * 1+KEY_HEIGHT*0.3*1, x + 120, y + KEY_HEIGHT * 2+KEY_HEIGHT*0.3*1);
 	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_FHR_BASE));
 	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
-	printf("count=%d ,str = %s \n",count++,txt);
 	SetRect(&rc, x, y + KEY_HEIGHT * 2+KEY_HEIGHT*0.3*2, x + 120, y + KEY_HEIGHT * 3+KEY_HEIGHT*0.3*2);
 	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_AMPLITUDE));
 	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
-	printf("count=%d ,str = %s \n",count++,txt);
 	SetRect(&rc, x, y + KEY_HEIGHT * 3+KEY_HEIGHT*0.3*3, x + 120, y + KEY_HEIGHT * 4+KEY_HEIGHT*0.3*3);
 	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_FAST_TIME));
 	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
-	printf("count=%d ,str = %s \n",count++,txt);
 	SetRect(&rc, x, y + KEY_HEIGHT * 4+KEY_HEIGHT*0.3*4, x + 120, y + KEY_HEIGHT * 5+KEY_HEIGHT*0.3*4);
 	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_FAST_AMPL));
 	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
-	printf("count=%d ,str = %s \n",count++,txt);
 	SetRect(&rc, x, y + KEY_HEIGHT * 5+KEY_HEIGHT*0.3*5, x + 120, y + KEY_HEIGHT * 6+KEY_HEIGHT*0.3*5);
 	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_FM_TIMES));
 	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
-	printf("count=%d ,str = %s \n",count++,txt);
+	
 	x += 120;
 	SetRect(&rc, x, y , x + 70, y + KEY_HEIGHT);
 	sprintf(txt, "0");
@@ -623,7 +618,7 @@ static VOID DispAnalysisFischer(HDC hdc, PRECT prc, ARET_SAVE *pRet)
 	SetRect(&rc, x, y + KEY_HEIGHT * 5+KEY_HEIGHT*0.3*5, x + 120, y + KEY_HEIGHT * 6+KEY_HEIGHT*0.3*5);
 	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_SLOWDOWN));
 	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
-	//从上到下是 0分  <100,>180   <5   <2   无   LD,重度VD
+	//从上到下是 0分  <100,>180   <5   <2   无   LD,>=8
 	x += 120;
 	SetRect(&rc, x, y , x + deltaWidth, y + KEY_HEIGHT);
 	sprintf(txt, "0");
@@ -643,7 +638,7 @@ static VOID DispAnalysisFischer(HDC hdc, PRECT prc, ARET_SAVE *pRet)
 	SetRect(&rc, x, y + KEY_HEIGHT * 5+KEY_HEIGHT*0.3*5, x + deltaWidth, y + KEY_HEIGHT * 6+KEY_HEIGHT*0.3*5);
 	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_SLOWDOWN_TYPE0));
 	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
-	//从上到下是 1分  100~119\n161~180   5~10,>30   2~6   周期性   轻度VD
+	//从上到下是 1分  100~119\n161~180   5~9,>30   2~6  1~4 4~7,VD 
 	x += deltaWidth;
 	SetRect(&rc, x, y , x + deltaWidth, y + KEY_HEIGHT);
 	sprintf(txt, "1");
@@ -653,18 +648,18 @@ static VOID DispAnalysisFischer(HDC hdc, PRECT prc, ARET_SAVE *pRet)
 	printf("count=%d kkkkkkkkkkkkkkkkkkkkkkkkkkk,str = %s \n",count++,txt);
 	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
 	SetRect(&rc, x, y + KEY_HEIGHT * 2+KEY_HEIGHT*0.3*2, x + deltaWidth, y + KEY_HEIGHT * 3+KEY_HEIGHT*0.3*2);
-	sprintf(txt, " 5~10,>30");
+	sprintf(txt, " 5~9,>30");
 	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
 	SetRect(&rc, x, y + KEY_HEIGHT * 3+KEY_HEIGHT*0.3*3, x + deltaWidth, y + KEY_HEIGHT * 4+KEY_HEIGHT*0.3*3);
 	sprintf(txt, "2~6");
 	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
 	SetRect(&rc, x, y + KEY_HEIGHT * 4+KEY_HEIGHT*0.3*4, x + deltaWidth, y + KEY_HEIGHT * 5+KEY_HEIGHT*0.3*4);
-	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_ACCELRATION_TYPE1));
+	sprintf(txt, "1~4");
 	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
 	SetRect(&rc, x, y + KEY_HEIGHT * 5+KEY_HEIGHT*0.3*5, x + deltaWidth, y + KEY_HEIGHT * 6+KEY_HEIGHT*0.3*5);
-	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_SLOWDOWN_TYPE1));
+	sprintf(txt, "4~7,VD");
 	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
-	//从上到下是 2分  120~160   10~30   >6   非周期性   无type-O-dip散发
+	//从上到下是 2分  120~160   10~30   >6  >4 无,其他
 	x += deltaWidth;
 	SetRect(&rc, x, y , x + deltaWidth, y + KEY_HEIGHT);
 	sprintf(txt, "2");
@@ -679,7 +674,7 @@ static VOID DispAnalysisFischer(HDC hdc, PRECT prc, ARET_SAVE *pRet)
 	sprintf(txt, ">6");
 	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
 	SetRect(&rc, x, y + KEY_HEIGHT * 4+KEY_HEIGHT*0.3*4, x + deltaWidth, y + KEY_HEIGHT * 5+KEY_HEIGHT*0.3*4);
-	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_ACCELRATION_TYPE2));
+	sprintf(txt, ">4");
 	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
 	SetRect(&rc, x, y + KEY_HEIGHT * 5+KEY_HEIGHT*0.3*5, x + deltaWidth, y + KEY_HEIGHT * 6+KEY_HEIGHT*0.3*5);
 	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_SLOWDOWN_TYPE2));
@@ -689,35 +684,34 @@ static VOID DispAnalysisFischer(HDC hdc, PRECT prc, ARET_SAVE *pRet)
 	SetRect(&rc, x, y , x + deltaWidth, y + KEY_HEIGHT);
 	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_RESULT));
 	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	//心率基线
 	SetRect(&rc, x, y + KEY_HEIGHT * 1+KEY_HEIGHT*0.3*1, x + deltaWidth, y + KEY_HEIGHT * 2+KEY_HEIGHT*0.3*1);
 	if (pRet->fhr_JX)
 		sprintf(txt, "%d", pRet->fhr_JX);
 	else
 		strcpy(txt, "--");
 	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	//振幅变异
 	SetRect(&rc, x, y + KEY_HEIGHT * 2+KEY_HEIGHT*0.3*2, x + deltaWidth, y + KEY_HEIGHT * 3+KEY_HEIGHT*0.3*2);
 	if (pRet->fhr_ZV)
 		sprintf(txt, "%d", pRet->fhr_ZV);
 	else
 		strcpy(txt, "--");
 	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	//周期变异
 	SetRect(&rc, x, y + KEY_HEIGHT * 3+KEY_HEIGHT*0.3*3, x + deltaWidth, y + KEY_HEIGHT * 4+KEY_HEIGHT*0.3*3);
-	if (pRet->fasttime)
-		sprintf(txt, "%d", pRet->fasttime);
+	if (pRet->fhr_QV)
+		sprintf(txt, "%d", pRet->fhr_QV);
 	else
 		strcpy(txt, "--");
 	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	//加速
 	SetRect(&rc, x, y + KEY_HEIGHT * 4+KEY_HEIGHT*0.3*4, x + deltaWidth, y + KEY_HEIGHT * 5+KEY_HEIGHT*0.3*4);
-	if (pRet->fasthigh)
-		sprintf(txt, "%d", pRet->fasthigh);
-	else
-		strcpy(txt, "--");
+	sprintf(txt, "%d", pRet->tdfast);
 	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	//减速
 	SetRect(&rc, x, y + KEY_HEIGHT * 5+KEY_HEIGHT*0.3*5, x + deltaWidth, y + KEY_HEIGHT * 6+KEY_HEIGHT*0.3*5);
-	if (pRet->fm_nr)
-		sprintf(txt, "%d", pRet->fm_nr);
-	else
-		strcpy(txt, "--");
+	sprintf(txt, "%d", pRet->tdslow);
 	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
 	//从上到下是 FISCHER评分方法 监测时间 有效数据 开始时间 结束时间
 	x += 88;
@@ -750,7 +744,382 @@ static VOID DispAnalysisFischer(HDC hdc, PRECT prc, ARET_SAVE *pRet)
 }
 
 
-//
+
+//Krebs评分方法 @vinyin 2015-05-05
+static VOID DispAnalysisKrebs(HDC hdc, PRECT prc, ARET_SAVE *pRet)
+{
+	printf("Krebs评分方法\n");
+	INT32 x = prc->left + DLG_OFFSET;
+	INT32 y = prc->top + DLG_OFFSET/2;
+	INT32 y1;
+	UCHAR txt[64];
+	RECT rc;
+	SetTextColor(hdc, GetWindowElementColor (FGC_CONTROL_DEF));
+	SetPenColor(hdc, GetWindowElementColor (FGC_CONTROL_DEF));
+	//
+	const UCHAR width = 90;
+	const UCHAR deltaWidth = 83;
+	Rect(hdc, x, y, x + width * 5 + 2, y + KEY_HEIGHT * 8.4);
+	
+	Line(hdc, x, y + KEY_HEIGHT * 1.2*1, x + width * 5, y + KEY_HEIGHT * 1.2*1);
+	Line(hdc, x, y + KEY_HEIGHT * 1.2*2, x + width * 5, y + KEY_HEIGHT * 1.2*2);
+	Line(hdc, x, y + KEY_HEIGHT * 1.2*3, x + width * 5, y + KEY_HEIGHT * 1.2*3);
+	Line(hdc, x, y + KEY_HEIGHT * 1.2*4, x + width * 5, y + KEY_HEIGHT * 1.2*4);
+	Line(hdc, x, y + KEY_HEIGHT * 1.2*5, x + width * 5, y + KEY_HEIGHT * 1.2*5);
+	Line(hdc, x, y + KEY_HEIGHT * 1.2*6, x + width * 5, y + KEY_HEIGHT * 1.2*6);
+
+	Line(hdc, x +  120+deltaWidth*0, y, x +  120+deltaWidth*0, y + KEY_HEIGHT * 8.4);
+	Line(hdc, x +  120+deltaWidth*1, y, x +  120+deltaWidth*1, y + KEY_HEIGHT * 8.4);
+	Line(hdc, x +  120+deltaWidth*2, y, x +  120+deltaWidth*2, y + KEY_HEIGHT * 8.4);
+	Line(hdc, x +  120+deltaWidth*3, y, x +  120+deltaWidth*3, y + KEY_HEIGHT *8.4);
+	//从上到下是 项目 心率基线 振幅变异 周期变异 加速 减速 胎动 
+	SetRect(&rc, x, y+10 , x + 120, y + KEY_HEIGHT);
+	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_ITEMS));
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	SetRect(&rc, x, y + KEY_HEIGHT * 1.2 + 5, x + 120, y + KEY_HEIGHT * 2.2);
+	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_FHR_BASE));
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	SetRect(&rc, x, y + KEY_HEIGHT * 2.4+5, x + 120, y + KEY_HEIGHT *3.4);
+	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_AMPLITUDE_VAR));
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	
+	SetRect(&rc, x, y + KEY_HEIGHT * 3.6+5, x + 120, y + KEY_HEIGHT * 4.6);
+	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_PERIOD_VAR));
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	
+	SetRect(&rc, x, y + KEY_HEIGHT * 4.8+5, x + 120, y + KEY_HEIGHT * 5.8);
+	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_ACCELRATION));
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	
+	SetRect(&rc, x, y + KEY_HEIGHT *6.0+5, x + 120, y + KEY_HEIGHT * 7);
+	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_SLOWDOWN));
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+
+	SetRect(&rc, x, y + KEY_HEIGHT * 7.2+5, x + 120, y + KEY_HEIGHT * 8.2);
+	sprintf(txt, "%s",LoadString(STR_DLG_ANLS_FETALMOVIE));
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	//从上到下是 0分  <100,>180   <5   <3  无 >=2  0   
+	x += 120;
+	SetRect(&rc, x, y , x + deltaWidth, y + KEY_HEIGHT);
+	sprintf(txt, "0");
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	SetRect(&rc, x, y + KEY_HEIGHT * 1+KEY_HEIGHT*0.3*1, x + deltaWidth, y + KEY_HEIGHT * 2+KEY_HEIGHT*0.3*1);
+	sprintf(txt, "<100,>180");
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	SetRect(&rc, x, y + KEY_HEIGHT * 2+KEY_HEIGHT*0.3*2, x + deltaWidth, y + KEY_HEIGHT * 3+KEY_HEIGHT*0.3*2);
+	sprintf(txt, "<5");
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	SetRect(&rc, x, y + KEY_HEIGHT * 3+KEY_HEIGHT*0.3*3, x + deltaWidth, y + KEY_HEIGHT * 4+KEY_HEIGHT*0.3*3);
+	sprintf(txt, "<3");
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	SetRect(&rc, x, y + KEY_HEIGHT * 4.8+5, x + deltaWidth, y + KEY_HEIGHT * 5.8);
+	sprintf(txt, "%s",LoadString(STR_DLG_ANLS_NOTHING));
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	SetRect(&rc, x, y + KEY_HEIGHT *6.0+5, x + deltaWidth, y + KEY_HEIGHT *7);
+	sprintf(txt, "%s", ">=2");//LoadString());
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+
+	SetRect(&rc, x, y + KEY_HEIGHT * 7.2+5, x + deltaWidth, y + KEY_HEIGHT * 8.2);
+	sprintf(txt, "%s", "0");//LoadString());
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	//从上到下是 1分  100~119,161~180 5~9,>25 3~6 1~4 1 1~4
+	x += deltaWidth;
+	SetRect(&rc, x, y , x + deltaWidth, y + KEY_HEIGHT);
+	sprintf(txt, "1");
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	SetRect(&rc, x + 4, y + KEY_HEIGHT * 1 + 2+KEY_HEIGHT*0.3*1, x + deltaWidth - 4, y + KEY_HEIGHT * 2+KEY_HEIGHT*0.25*1);
+	sprintf(txt, "100~119,161~180");
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	SetRect(&rc, x, y + KEY_HEIGHT * 2+KEY_HEIGHT*0.3*2, x + deltaWidth, y + KEY_HEIGHT * 3+KEY_HEIGHT*0.3*2);
+	sprintf(txt, "5~9,>25");
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	SetRect(&rc, x, y + KEY_HEIGHT * 3+KEY_HEIGHT*0.3*3, x + deltaWidth, y + KEY_HEIGHT * 4+KEY_HEIGHT*0.3*3);
+	sprintf(txt, "3~6");
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	SetRect(&rc, x, y + KEY_HEIGHT * 4.8+5, x + deltaWidth, y + KEY_HEIGHT * 5.8);
+	sprintf(txt, "1~4");
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	SetRect(&rc, x,y + KEY_HEIGHT *6.0+5, x + deltaWidth, y + KEY_HEIGHT *7);
+	sprintf(txt, "%s", "1");//LoadString());
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	SetRect(&rc, x, y + KEY_HEIGHT * 7.2+5, x + deltaWidth, y + KEY_HEIGHT * 8.2);
+	sprintf(txt, "%s", "1~4");//LoadString());
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	//从上到下是 2分  <20   >11   >24  >3  无减速或1个减速 
+	x += deltaWidth;
+	SetRect(&rc, x, y , x + deltaWidth, y + KEY_HEIGHT);
+	sprintf(txt, "2");
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	SetRect(&rc, x, y + KEY_HEIGHT * 1+KEY_HEIGHT*0.3*1, x + deltaWidth, y + KEY_HEIGHT * 2+KEY_HEIGHT*0.3*1);
+	sprintf(txt, "120~160");
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	SetRect(&rc, x, y + KEY_HEIGHT * 2+KEY_HEIGHT*0.3*2, x + deltaWidth, y + KEY_HEIGHT * 3+KEY_HEIGHT*0.3*2);
+	sprintf(txt, "10~25");
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	SetRect(&rc, x, y + KEY_HEIGHT * 3+KEY_HEIGHT*0.3*3, x + deltaWidth, y + KEY_HEIGHT * 4+KEY_HEIGHT*0.3*3);
+	sprintf(txt, ">6");
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	SetRect(&rc, x, y + KEY_HEIGHT * 4.8+5, x + deltaWidth, y + KEY_HEIGHT * 5.8);
+	sprintf(txt, "%s", ">4");
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	SetRect(&rc, x, y + KEY_HEIGHT *6.0+5, x + deltaWidth, y + KEY_HEIGHT *7);
+	sprintf(txt, "%s",LoadString(STR_DLG_ANLS_NOTHINGORED));
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	SetRect(&rc, x, y + KEY_HEIGHT * 7.2+5, x + deltaWidth,y + KEY_HEIGHT * 8.2);
+	sprintf(txt, "%s", ">4");
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	//从上到下是 本例结果  结果1 结果2 结果3 结果4 结果5
+	x += deltaWidth;
+	SetRect(&rc, x, y , x + deltaWidth, y + KEY_HEIGHT);
+	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_RESULT));
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	//基线
+	SetRect(&rc, x, y + KEY_HEIGHT * 1+KEY_HEIGHT*0.3*1, x + deltaWidth, y + KEY_HEIGHT * 2+KEY_HEIGHT*0.3*1);
+	if (pRet->fhr_JX)
+		sprintf(txt, "%d", pRet->fhr_JX);
+	else
+		strcpy(txt, "--");
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	//振幅
+	SetRect(&rc, x, y + KEY_HEIGHT * 2+KEY_HEIGHT*0.3*2, x + deltaWidth, y + KEY_HEIGHT * 3+KEY_HEIGHT*0.3*2);
+	if (pRet->fhr_ZV)
+		sprintf(txt, "%d", pRet->fhr_ZV);
+	else
+		strcpy(txt, "--");
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	//周期
+	SetRect(&rc, x, y + KEY_HEIGHT * 3+KEY_HEIGHT*0.3*3, x + deltaWidth, y + KEY_HEIGHT * 4+KEY_HEIGHT*0.3*3);
+	if (pRet->fhr_QV)
+		sprintf(txt, "%d", pRet->fhr_QV);
+	else
+		strcpy(txt, "--");
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	//加速
+	SetRect(&rc, x, y + KEY_HEIGHT * 4.8+5, x + deltaWidth, y + KEY_HEIGHT * 5.8);
+	sprintf(txt, "%d", pRet->tdfast);
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	//减速
+	SetRect(&rc, x, y + KEY_HEIGHT * 6.0+5, x + deltaWidth, y + KEY_HEIGHT * 7);
+	sprintf(txt, "%d", pRet->tdslow);
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	//胎动
+	SetRect(&rc, x, y + KEY_HEIGHT * 7.2+5, x + deltaWidth, y + KEY_HEIGHT * 8.2);
+	sprintf(txt, "%d", pRet->fm_nr);
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	//从上到下是 Krebs评分方法 监测时间 有效数据 开始时间 结束时间
+	x += 88;
+	y1 = y + 8;
+	y += KEY_HEIGHT * 6 + DLG_OFFSET;
+	sprintf(txt, "%s",LoadString(STR_DLG_ANLS_KREBS));
+	TextOut(hdc, x, y1, txt);
+	y1 += STATIC_HEIGHT;
+	sprintf(txt, "%s %d:%02d", LoadString(STR_DLG_ANLS_TIME),
+		pRet->second / 60, pRet->second % 60);
+	TextOut(hdc, x, y1, txt);
+	y1 += STATIC_HEIGHT;
+	sprintf(txt, "%s   %d%%", LoadString(STR_DLG_ANLS_VALID), pRet->vld_pct);
+	TextOut(hdc, x, y1, txt);
+	y1 += STATIC_HEIGHT;
+	
+	struct tm *plocal_time;
+	UINT32 time = pRet->endtime - pRet->second;
+	plocal_time = localtime((const time_t *)&time);
+	sprintf(txt, "%s: %02d:%02d:%02d", LoadString(STR_PRINT_TIME_START), 
+		plocal_time->tm_hour, plocal_time->tm_min, plocal_time->tm_sec);
+	TextOut(hdc, x, y1, txt);
+	y1 += STATIC_HEIGHT;
+	
+	plocal_time = localtime((const time_t *)&(pRet->endtime));
+	sprintf(txt, "%s: %02d:%02d:%02d", LoadString(STR_PRINT_TIME_END), 
+		plocal_time->tm_hour, plocal_time->tm_min, plocal_time->tm_sec);
+	TextOut(hdc, x, y1, txt);
+}
+//cst评分方法 @vinyin 2015-05-05
+static VOID DispAnalysisCST(HDC hdc, PRECT prc, ARET_SAVE *pRet)
+{
+	printf("CST评分方法\n");
+	INT32 x = prc->left + DLG_OFFSET;
+	INT32 y = prc->top + DLG_OFFSET;
+	INT32 y1;
+	UCHAR txt[64];
+	RECT rc;
+	SetTextColor(hdc, GetWindowElementColor (FGC_CONTROL_DEF));
+	SetPenColor(hdc, GetWindowElementColor (FGC_CONTROL_DEF));
+	//
+	const UCHAR width = 90;
+	const UCHAR deltaWidth = 83;
+	Rect(hdc, x, y, x + width * 5 + 2, y + KEY_HEIGHT * 8);
+
+	Line(hdc, x, y + KEY_HEIGHT * 1.33, x + width * 5, y + KEY_HEIGHT * 1.33);
+	Line(hdc, x, y + KEY_HEIGHT * 1.33 * 2, x + width * 5, y + KEY_HEIGHT * 1.33 * 2);
+	Line(hdc, x, y + KEY_HEIGHT * 1.33 * 3, x + width * 5, y + KEY_HEIGHT * 1.33 * 3);
+	Line(hdc, x, y + KEY_HEIGHT * 1.33 * 4, x + width * 5, y + KEY_HEIGHT * 1.33 * 4);
+	Line(hdc, x, y + KEY_HEIGHT * 1.33 * 5, x + width * 5, y + KEY_HEIGHT * 1.33 * 5);
+
+	Line(hdc, x +  120+deltaWidth*0, y, x +  120+deltaWidth*0, y + KEY_HEIGHT * 8);
+	Line(hdc, x +  120+deltaWidth*1, y, x +  120+deltaWidth*1, y + KEY_HEIGHT * 8);
+	Line(hdc, x +  120+deltaWidth*2, y, x +  120+deltaWidth*2, y + KEY_HEIGHT * 8);
+	Line(hdc, x +  120+deltaWidth*3, y, x +  120+deltaWidth*3, y + KEY_HEIGHT * 8);
+	//从上到下是 项目 胎心基线 振幅摆动 频率摆动 加速 减速 
+	SetRect(&rc, x, y , x + 120, y + KEY_HEIGHT* 1.33);
+	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_ITEMS));
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	SetRect(&rc, x, y + KEY_HEIGHT * 1.33+10, x + 120, KEY_HEIGHT * 1.33*2);
+	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_FHR_BASE));
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	SetRect(&rc, x, y + KEY_HEIGHT * 1.33*2, x + 120, y + KEY_HEIGHT * 1.33*3);
+	sprintf(txt, "%s",LoadString(STR_DLG_ANLS_AMPLITUDE_VAR));
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	SetRect(&rc, x, y + KEY_HEIGHT * 1.33*3, x + 120, y + KEY_HEIGHT * 1.33*4);
+	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_PERIOD_VAR));
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	SetRect(&rc, x, y + KEY_HEIGHT * 1.33*4, x + 120, y + KEY_HEIGHT * 1.33*5);
+	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_ACCELRATION));
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	SetRect(&rc, x, y + KEY_HEIGHT * 1.33*5, x + 120, y + KEY_HEIGHT * 1.33*6);
+	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_SLOWDOWN));
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	//从上到下是 0分 >100,<180 <5 <2 无 晚期+其它
+	x += 120;
+	SetRect(&rc, x, y , x + deltaWidth, y + KEY_HEIGHT* 1.33);
+	sprintf(txt, "%s", "0");
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	SetRect(&rc, x, y + KEY_HEIGHT * 1.33+10, x + deltaWidth, KEY_HEIGHT * 1.33*2);
+	sprintf(txt, "%s", "<100,>180");//LoadString("胎心节律稳定性"));
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	SetRect(&rc, x, y + KEY_HEIGHT * 1.33*2, x + deltaWidth, y + KEY_HEIGHT * 1.33*3);
+	sprintf(txt, "%s","<5");// LoadString("小时加速次数"));
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	SetRect(&rc, x, y + KEY_HEIGHT * 1.33*3, x + deltaWidth, y + KEY_HEIGHT * 1.33*4);
+	sprintf(txt, "%s", "<2");//LoadString(STR_DLG_ANLS_PERIOD_VAR));
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	SetRect(&rc, x, y + KEY_HEIGHT * 1.33*4, x + deltaWidth, y + KEY_HEIGHT * 1.33*5);
+	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_NOTHING));
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	SetRect(&rc, x, y + KEY_HEIGHT * 1.33*5, x + deltaWidth, y + KEY_HEIGHT * 1.33*6);
+	sprintf(txt, "%s",LoadString(STR_DLG_ANLS_LDOROTHER));
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	//从上到下是 1分 100~119,161~180 有胎动无加速 无变化 
+	x += deltaWidth;
+	SetRect(&rc, x, y , x + deltaWidth, y + KEY_HEIGHT* 1.33);
+	sprintf(txt, "%s", "1");
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	SetRect(&rc, x, y + KEY_HEIGHT * 1.33+10, x + deltaWidth, KEY_HEIGHT * 1.33*2);
+	sprintf(txt, "%s", "100~119,161~180");//LoadString("胎心节律稳定性"));
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	SetRect(&rc, x, y + KEY_HEIGHT * 1.33*2, x + deltaWidth, y + KEY_HEIGHT * 1.33*3);
+	sprintf(txt, "%s","5~9,>25");// LoadString("小时加速次数"));
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	SetRect(&rc, x, y + KEY_HEIGHT * 1.33*3, x + deltaWidth, y + KEY_HEIGHT * 1.33*4);
+	sprintf(txt, "%s", "2~6");//LoadString(STR_DLG_ANLS_PERIOD_VAR));
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	SetRect(&rc, x, y + KEY_HEIGHT * 1.33*4, x + deltaWidth, y + KEY_HEIGHT * 1.33*5);
+	sprintf(txt, "%s",LoadString(STR_DLG_ANLS_ACCELRATION_TYPE1));
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	SetRect(&rc, x, y + KEY_HEIGHT * 1.33*5, x + deltaWidth, y + KEY_HEIGHT * 1.33*6);
+	sprintf(txt, "%s",LoadString(STR_DLG_ANLS_CHANGE));
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	//从上到下是 2分 120~160 
+	x += deltaWidth;
+	SetRect(&rc, x, y , x + deltaWidth, y + KEY_HEIGHT* 1.33);
+	sprintf(txt, "%s", "2");
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	SetRect(&rc, x, y + KEY_HEIGHT * 1.33+10, x + deltaWidth, KEY_HEIGHT * 1.33*2);
+	sprintf(txt, "%s", "120~160");//LoadString("胎心节律稳定性"));
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	SetRect(&rc, x, y + KEY_HEIGHT * 1.33*2, x + deltaWidth, y + KEY_HEIGHT * 1.33*3);
+	sprintf(txt, "%s","10~25");// LoadString("小时加速次数"));
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	SetRect(&rc, x, y + KEY_HEIGHT * 1.33*3, x + deltaWidth, y + KEY_HEIGHT * 1.33*4);
+	sprintf(txt, "%s", ">6");//LoadString(STR_DLG_ANLS_PERIOD_VAR));
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	SetRect(&rc, x, y + KEY_HEIGHT * 1.33*4, x + deltaWidth, y + KEY_HEIGHT * 1.33*5);
+	sprintf(txt, "%s",LoadString(STR_DLG_ANLS_ACCELRATION_TYPE2));
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	SetRect(&rc, x, y + KEY_HEIGHT * 1.33*5, x + deltaWidth, y + KEY_HEIGHT * 1.33*6);
+	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_NOTHING));
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	//从上到下是 本例结果 结果1 结果2 结果3
+	x += deltaWidth;
+	SetRect(&rc, x, y , x + deltaWidth, y + KEY_HEIGHT* 1.33);
+	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_RESULT));
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	SetRect(&rc, x, y + KEY_HEIGHT * 1.33+10, x + deltaWidth, KEY_HEIGHT * 1.33*2);
+	if (pRet->fhr_JX)
+		sprintf(txt, "%d", pRet->fhr_JX);
+	else
+		strcpy(txt, "--");
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	//振幅
+	SetRect(&rc, x, y + KEY_HEIGHT * 1.33*2, x + deltaWidth, y + KEY_HEIGHT * 1.33*3);
+	if (pRet->fhr_ZV)
+		sprintf(txt, "%d", pRet->fhr_ZV);
+	else
+		strcpy(txt, "--");
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	//周期
+	SetRect(&rc, x, y + KEY_HEIGHT * 1.33*3, x + deltaWidth, y + KEY_HEIGHT * 1.33*4);
+	if (pRet->fhr_QV)
+		sprintf(txt, "%d", pRet->fhr_QV);
+	else
+		strcpy(txt, "--");
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	//加速
+	SetRect(&rc, x, y + KEY_HEIGHT * 1.33*4, x + deltaWidth, y + KEY_HEIGHT * 1.33*5);
+	if (pRet->tdfast)//
+		if(pRet->fastType == 1)//周期性
+			sprintf(txt, "%s", LoadString(STR_DLG_ANLS_ACCELRATION_TYPE1));
+		else if(pRet->fastType == 2)//散在性
+			sprintf(txt, "%s", LoadString(STR_DLG_ANLS_ACCELRATION_TYPE2));
+		else
+			strcpy(txt, "--");
+	else
+		sprintf(txt, "%s", LoadString(STR_DLG_ANLS_NOTHING));
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	//减速
+	SetRect(&rc, x, y + KEY_HEIGHT * 1.33*5, x + deltaWidth, y + KEY_HEIGHT * 1.33*6);
+	if (pRet->tdslow)
+		if(pRet->slowType == 1)//晚期减速
+			sprintf(txt, "%s", LoadString(STR_DLG_ANLS_LASTSLOW));
+		else if(pRet->slowType == 2)//早期减速
+			sprintf(txt, "%s", LoadString(STR_DLG_ANLS_EDSLOW));
+		else if(pRet->slowType == 3)//变异
+			sprintf(txt, "%s", LoadString(STR_DLG_ANLS_CHANGE));
+		else
+			strcpy(txt, "--");
+	else
+		sprintf(txt, "%s", LoadString(STR_DLG_ANLS_NOTHING));
+	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
+	
+	//从上到下是 CST评分方法 监测时间 有效数据 开始时间 结束时间
+	x += 88;
+	y1 = y + 8;
+	y += KEY_HEIGHT * 6 + DLG_OFFSET;
+	sprintf(txt, "%s","CST评分方法");// LoadString(STR_DLG_ANLS_FISCHER));
+	TextOut(hdc, x, y1, txt);
+	y1 += STATIC_HEIGHT;
+	sprintf(txt, "%s %d:%02d", LoadString(STR_DLG_ANLS_TIME),
+		pRet->second / 60, pRet->second % 60);
+	TextOut(hdc, x, y1, txt);
+	y1 += STATIC_HEIGHT;
+	sprintf(txt, "%s   %d%%", LoadString(STR_DLG_ANLS_VALID), pRet->vld_pct);
+	TextOut(hdc, x, y1, txt);
+	y1 += STATIC_HEIGHT;
+	
+	struct tm *plocal_time;
+	UINT32 time = pRet->endtime - pRet->second;
+	plocal_time = localtime((const time_t *)&time);
+	sprintf(txt, "%s: %02d:%02d:%02d", LoadString(STR_PRINT_TIME_START), 
+		plocal_time->tm_hour, plocal_time->tm_min, plocal_time->tm_sec);
+	TextOut(hdc, x, y1, txt);
+	y1 += STATIC_HEIGHT;
+	
+	plocal_time = localtime((const time_t *)&(pRet->endtime));
+	sprintf(txt, "%s: %02d:%02d:%02d", LoadString(STR_PRINT_TIME_END), 
+		plocal_time->tm_hour, plocal_time->tm_min, plocal_time->tm_sec);
+	TextOut(hdc, x, y1, txt);
+	
+}
 
 static VOID DispPationAnalysis(HDC hdc, PRECT prc, ARET_SAVE *pRet)
 {
@@ -775,10 +1144,33 @@ static VOID DispPationAnalysis(HDC hdc, PRECT prc, ARET_SAVE *pRet)
 
 	//pdc->pLogFont = GetSystemFont(SYSLOGFONT_WCHAR_DEF);//phh
 	pdc->pLogFont = GetSystemFont(SYSLOGFONT_SMAFONT);//phh
-
 	
-	//DispAnalysis(hdc, prc, pRet);
-	DispAnalysisFischer(hdc, prc, pRet);
+	enum {
+		NST_SHOW_ANALYSIS = 1,//默认用nst评分--
+		FISCHER_SHOW_ANALYSIS,//fischer评分方法
+		KREBS_SHOW_ANALYSIS,//Krebs评分
+		CST_SHOW_ANALYSIS,//cst评分
+		
+	};
+	switch (FhrConfig.defaultAnalyType)
+	{
+		
+		case NST_SHOW_ANALYSIS:
+			DispAnalysis(hdc, prc, pRet);
+		break;
+		case FISCHER_SHOW_ANALYSIS:
+			DispAnalysisFischer(hdc, prc, pRet);
+		break;
+		case KREBS_SHOW_ANALYSIS:
+			DispAnalysisKrebs(hdc, prc, pRet);
+		break;
+		case CST_SHOW_ANALYSIS:
+			DispAnalysisCST(hdc, prc, pRet);
+		break;
+		default:
+		break;
+		printf("cur analytype=%d\n",FhrConfig.defaultAnalyType);
+	}
 	// 恢复现场
 	pdc->pLogFont = pFont;
 	SetBrushColor(hdc, brushColor);
@@ -867,19 +1259,14 @@ static VOID ShowPatientAnalysis(HWND hWnd, int show)
 	if (hCtrl = GetDlgItem(hWnd, IDC_FETAL_RECALL_PRINTPAGE_B))
 	{
 		//EnableWindow(hCtrl, !show && (RecallPatientPtr->ansis.len > 0));
-		EnableWindow(hCtrl, FALSE); //去掉评分打印
+	//	EnableWindow(hCtrl, FALSE); //去掉评分打印
+		EnableWindow(hCtrl, !show);
 	}
 	if (hCtrl = GetDlgItem(hWnd, IDC_FETAL_RECALL_PRINTALL_B))
 	{
 		EnableWindow(hCtrl, !show);
 	}
-	if (show == TRUE)
-	{
-		fb_getmem(rc.left, rc.top,
-			RecallAnalyGphMem.cx, RecallAnalyGphMem.cy, RecallAnalyGphMem.data);
-		DispPationAnalysis(hdc, (PRECT)&rc,
-			(ARET_SAVE*)(RecallPatientPtr->ansis.buffer));
-	}
+	printf("qqqqqqqqcur show =%d FALSE = %d TRUE = %d\n",show,FALSE,TRUE);
 	if (show == FALSE)
 	{
 		if (RecallAnalyGphMem.data)
@@ -897,13 +1284,18 @@ static VOID ShowPatientAnalysis(HWND hWnd, int show)
 		}
 //			FillRectEx(hdc, &rc, RecallInfoGphMem.cx, RecallInfoGphMem.data);
 	}
+	else
+	{
+		if (TRUE == show)
+			fb_getmem(rc.left, rc.top,RecallAnalyGphMem.cx, RecallAnalyGphMem.cy, RecallAnalyGphMem.data);
+		DispPationAnalysis(hdc, (PRECT)&rc,
+			(ARET_SAVE*)(RecallPatientPtr->ansis.buffer));
+	}
 	ReleaseDC(hdc);
 }
 
 static VOID ShowPatientInformation(HWND hWnd, int show)
 {
-	// 300 = RecallInfoGphMem.cx
-	// 252 = RecallInfoGphMem.cy
 	RECT rc = 
 	{
 		350,
@@ -945,8 +1337,8 @@ static VOID ShowPatientInformation(HWND hWnd, int show)
 	}
 	if (hCtrl = GetDlgItem(hWnd, IDC_FETAL_RECALL_PRINTPAGE_B))
 	{
-		//EnableWindow(hCtrl, !show && (RecallPatientPtr->ansis.len > 0));
-		EnableWindow(hCtrl, FALSE); //去掉评分打印
+		EnableWindow(hCtrl, !show && (RecallPatientPtr->ansis.len > 0));
+		//EnableWindow(hCtrl, FALSE); //去掉评分打印
 	}
 	if (hCtrl = GetDlgItem(hWnd, IDC_FETAL_RECALL_PRINTALL_B))
 	{
@@ -1006,15 +1398,6 @@ static VOID InitInfoText(PPTNINFO pInfo)
 		LoadString(STR_DLG_RECALL_LENGTH),
 		len / 3600, (len % 3600) / 60, len % 60);
 	sprintf(InfoText[7], "%s", LoadString(STR_DLG_PATIENT_NOTE));
-//	p = pInfo->note;
-//	for (i = 8; i < TABLESIZE(InfoText); i++)
-//	{
-//		if (strlen(p) == 0)
-//			break;
-//		strncpy(InfoText[i], p, sizeof(InfoText[i]) - 1);
-//		printf("InfoText[%d] =%s\r\n",i,InfoText[i]);
-//		p += strlen(InfoText[i]);
-//	}
 }
 
 
@@ -1084,21 +1467,177 @@ static VOID FetalRecallInit(HWND hWnd)
 	if (hCtrl = GetDlgItem(hWnd, IDC_FETAL_RECALL_PRINTPAGE_B))
 	{
 		SetWindowBkColor(hCtrl, ((PCONTROL)hWnd)->iBkColor);
-		//EnableWindow(hCtrl, (RecallPatientPtr->ansis.len > 0));
-		EnableWindow(hCtrl, FALSE); //去掉评分打印
+		EnableWindow(hCtrl, (RecallPatientPtr->ansis.len > 0));
+		//EnableWindow(hCtrl, FALSE); //去掉评分打印
 	}
 	if (hCtrl = GetDlgItem(hWnd, IDC_FETAL_RECALL_PRINTALL_B))
 	{
 		SetWindowBkColor(hCtrl, ((PCONTROL)hWnd)->iBkColor);
 	}
 }
+//设置默认的评分方法
+static BOOL ChoseAnalysDlg_OnCommand(HWND hWnd, DWORD choiceID)
+{
+	
+	//所有单选框设为非选中状态
+	INT i;
+	for ( i = IDC_ANALY_SETUP_SONWINDOW_BUT1;i <= IDC_ANALY_SETUP_SONWINDOW_BUT4; i++)
+	{
+		CheckDlgButton(hWnd,i,FALSE);
+	}
+	switch (choiceID)
+	{	case IDC_ANALY_SETUP_SONWINDOW_BUT1:
+		case IDC_ANALY_SETUP_SONWINDOW_BUT2:
+		case IDC_ANALY_SETUP_SONWINDOW_BUT3:
+		case IDC_ANALY_SETUP_SONWINDOW_BUT4:
+			s_lastChoseGrade = (INT)(choiceID - IDC_ANALY_SETUP_SONWINDOW_BUT1 + 1); 
+			CheckDlgButton(hWnd,choiceID,TRUE);//相应的单选框设选中状态
+			break;
+		case IDC_ANALY_SETUP_SONWINDOW_BUT5://按下确认
+			if(FhrConfig.defaultAnalyType != s_lastChoseGrade)
+			{
+				printf("save%d ------> %d\n",FhrConfig.defaultAnalyType,s_lastChoseGrade);
+				FhrConfig.defaultAnalyType = s_lastChoseGrade;
+				Save_Config(CFG_KEYID_DEFAULTANALYTYPE);
+			}
+			EndDialog(hWnd, IDOK);
+			break;
+		default:
+			return 0;
+			break;
+	}
+	return 1;
+}
+static void ChoseAnalyDefaultWindowInit(HWND hWnd)
+{	
+	//得到用户上次设置的评分法
+	FhrConfig.defaultAnalyType = FhrConfig.defaultAnalyType?FhrConfig.defaultAnalyType:1;
+	s_lastChoseGrade = FhrConfig.defaultAnalyType;//FhrConfig.defaultAnalyType?FhrConfig.defaultAnalyType:-1;
+	//printf("初始化20150518*****%d******+界面啦\n",staticSame);
+	HWND hCtrl;
+	INT32 i;
+	for (i = IDC_ANALY_SETUP_SONWINDOW_BUT1; i <= IDC_ANALY_SETUP_SONWINDOW_BUT5; i++)
+	{
+		hCtrl = GetDlgItem(hWnd, i);
+		if (!hCtrl)
+			return;
+		SetWindowBkColor(hCtrl, ((PWIN)hWnd)->iBkColor);
+	}
+}
+static void ShowChoseAnalyDefaultWindow(HWND hWnd)
+{		
+	CHAR *txt = NULL;
+	HWND hCtrl = 0;
+	INT  i;
+	for (i = 0; i < 4; i++)
+	{
+		hCtrl = GetDlgItem(hWnd,IDC_ANALY_SETUP_SONWINDOW_BUT1+ i);
+		if (0 != (hCtrl))
+		{
+			if (FhrConfig.defaultAnalyType == i+1)//上次选中的打勾
+				CheckDlgButton(hWnd,i+IDC_ANALY_SETUP_SONWINDOW_BUT1,TRUE);
+		}
+		
+	}
+}
+static INT32 PtnRecallDlgChoseAnalyWindow (HANDLE hWnd, INT32 message, DWORD wParam, LPARAM lParam)
+{
+	switch(message)
+	{
+		case MSG_INITDIALOG:
+			ChoseAnalyDefaultWindowInit(hWnd);
+			break;
+		case MSG_SHOWWINDOW:
+			ShowChoseAnalyDefaultWindow(hWnd);
+			break;
+		case MSG_COMMAND:
+			if(ChoseAnalysDlg_OnCommand(hWnd, wParam))
+				return 0;	
+			break;
+		default:
+			break;
+	}
+	
+	return DefaultDialogProc (hWnd, message, wParam, lParam);
+
+}
+VOID SetDefaultAnalyDialog(HANDLE hOwner)
+{
+	enum dlg_size{
+		DLG_WIDTH = 320,
+		DLG_HEIGHT =380,
+		DLG_START_X = 70,
+		STR_START_X = 100,
+		DLG_START_Y = 30,
+	};
+	static BUTTONDATA cbox[4];
+	static BUTTONDATA btn_ok;
+	memset(cbox, 0, sizeof(cbox));
+	memset(&btn_ok, 0, sizeof(btn_ok));
+	CTRLDATA ctrl_data[] = {
+	//带文字的四个小方格
+		{ CTRL_BUTTON,  WS_VISIBLE | WS_TABSTOP | BS_CHECKBOX, WS_EX_NONE,
+			DLG_START_X, DLG_START_Y+KEY_HEIGHT,
+			STATIC_HEIGHT+140, STATIC_HEIGHT,
+			IDC_ANALY_SETUP_SONWINDOW_BUT1, STR_DLG_ANLS_NST, 0L, 0L },
+
+		{ CTRL_BUTTON,  WS_VISIBLE | WS_TABSTOP | BS_CHECKBOX, WS_EX_NONE,
+			DLG_START_X, DLG_START_Y+KEY_HEIGHT*2,
+			STATIC_HEIGHT+140, STATIC_HEIGHT,
+			IDC_ANALY_SETUP_SONWINDOW_BUT2, STR_DLG_ANLS_FISCHER, 0L, 0L },
+
+		{ CTRL_BUTTON,  WS_VISIBLE | WS_TABSTOP | BS_CHECKBOX, WS_EX_NONE,
+			DLG_START_X,DLG_START_Y+KEY_HEIGHT*3,
+			STATIC_HEIGHT+140, STATIC_HEIGHT,
+			IDC_ANALY_SETUP_SONWINDOW_BUT3, STR_DLG_ANLS_KREBS, 0L, 0L },
+
+		{ CTRL_BUTTON,  WS_VISIBLE | WS_TABSTOP | BS_CHECKBOX, WS_EX_NONE,
+			DLG_START_X,DLG_START_Y+KEY_HEIGHT*4,STATIC_HEIGHT+140,STATIC_HEIGHT,
+			IDC_ANALY_SETUP_SONWINDOW_BUT4, STR_DLG_ANLS_CST, 0L, 0L },
+////一个确定按钮
+		{ CTRL_BUTTON,  WS_VISIBLE | WS_TABSTOP, WS_EX_NONE,
+			STR_START_X+30,DLG_START_Y+KEY_HEIGHT*6,50,30,
+			IDC_ANALY_SETUP_SONWINDOW_BUT5, STR_DLG_CHAR_OK, 0L, 0L }
+	};
+	
+	DLGTEMPLATE dlg_data = {
+	   WS_ABSSCRPOS | WS_CAPTION | WS_BORDER | WS_MODALDLG, WS_NONE, 
+	   DLG_OFFSET+60, CTRL_HEIGHT, DLG_WIDTH, DLG_HEIGHT,
+	   STR_DLG_SETUP_FETAL, 0, NULL, 0L,
+	};
+	INT16 i, loops;
+	loops = TABLESIZE(ctrl_data);
+
+	WNDMEM   wndMem;
+	wndMem.pMainWin = GetMainWndMem(IDD_ANALY_SETUP_DEFAULT);
+	wndMem.pControl = GetCtrlWndMem(IDC_ANALY_SETUP_DEFAULT_FIRST);
+	wndMem.ctrlNum  = TABLESIZE(ctrl_data);
+	wndMem.task	 = SysGui_HTSK;
+	
+	dlg_data.controlnr = loops;
+	dlg_data.controls  = ctrl_data;
+	for(i = 0; i < loops; i++)
+	{
+		
+		SetCtrlDataAddData2(ctrl_data, loops, IDC_ANALY_SETUP_SONWINDOW_BUT1 + i, 
+							(UINT32)&cbox[i]);
+	}
+	
+	SetCtrlDataAddData2(ctrl_data, loops, IDC_ANALY_SETUP_SONWINDOW_BUT5, 
+						(UINT32)&btn_ok);
+	DialogBoxIndirectParam(&dlg_data, hOwner, IDD_PATIENT_RECALL, PtnRecallDlgChoseAnalyWindow, 0,
+							&wndMem);
+
+}
 
 static BOOL FetalRecallOnCommand(HWND hWnd, WORD ctrl, WORD code)
 {
 	BOOL ret = TRUE;
+	printf("ctrl = %d RecallAnalyFlag =%d IDC_FETAL_RECALL_PRINTPAGE_B=%d\n",ctrl,RecallAnalyFlag,IDC_FETAL_RECALL_PRINTPAGE_B);
 	switch (ctrl)
 	{
 		case IDC_FETAL_RECALL_ANALY_B:
+			//modify by vinyin2015-05-05!RecallAnalyFlag;从单一评分拓展到4种评分
 			RecallAnalyFlag = !RecallAnalyFlag;
 			ShowPatientAnalysis(hWnd, RecallAnalyFlag);
 			break;
@@ -1119,16 +1658,13 @@ static BOOL FetalRecallOnCommand(HWND hWnd, WORD ctrl, WORD code)
 				RecallPage = MaxRecallPage - 1;
 			FetalRecallShow(hWnd);
 			break;
-
-    #if _ENB_REC_FUNC
-		case IDC_FETAL_RECALL_PRINTPAGE_B:
-			RecordService(REC_RECALL_PAGE);
+		case IDC_FETAL_RECALL_PRINTPAGE_B://评分打印 现改为评分设置
+			SetDefaultAnalyDialog(hWnd);
 			break;
 
-		case IDC_FETAL_RECALL_PRINTALL_B:
+		case IDC_FETAL_RECALL_PRINTALL_B://全部打印
 			RecordService(REC_RECALL_ALL);
 			break;
-    #endif
 
 		case IDC_FETAL_RECALL_EXIT_B:
 			EndDialog(hWnd, IDOK);
@@ -1167,6 +1703,7 @@ FetalRecallProc(HWND hWnd, INT32 message, WPARAM wParam, LPARAM lParam)
 
 VOID FetalRecallDialog(HANDLE hOwner, INT16 index)
 {
+	printf("取出历史数据,%d\n",index);
 	RecallPatientPtr = FmsPtr->GetDataFile(FmsPtr, index);
 	
 	if (RecallPatientPtr == NULL)
@@ -1253,25 +1790,26 @@ VOID FetalRecallDialog(HANDLE hOwner, INT16 index)
 			IDC_FETAL_RECALL_SCROLL_L, STR_NULL,
 			0L, 0L
 		},
-		{   CTRL_BUTTON,
+///////////////
+		{   CTRL_BUTTON,//评分结果
 			WS_VISIBLE | WS_TABSTOP, WS_EX_NONE,
 			DLG_OFFSET * 2 + FETAL_GPH_WIDTH-10,
 			FHR_GPH_HEIGHT - KEY_HEIGHT * 2,
 			REMAIN_WIDTH,
 			KEY_HEIGHT,
-			IDC_FETAL_RECALL_INFO_B, STR_DLG_RECALL_INFO,
+			IDC_FETAL_RECALL_ANALY_B, STR_DLG_ANALY_SHOW,
 			0L, 0L
 		},
-		{   CTRL_BUTTON,
+		{   CTRL_BUTTON,//全部打印-->打印
 			WS_VISIBLE | WS_TABSTOP, WS_EX_NONE,
 			DLG_OFFSET * 2 + FETAL_GPH_WIDTH-10,
 			DLG_OFFSET + FHR_GPH_HEIGHT - KEY_HEIGHT,
 			REMAIN_WIDTH,
 			KEY_HEIGHT,
-			IDC_FETAL_RECALL_ANALY_B, STR_DLG_ANALY_SHOW,
+			IDC_FETAL_RECALL_PRINTALL_B, STR_DLG_RECALL_PRINT_ALL,
 			0L, 0L
-		},
-		{   CTRL_BUTTON,
+		},	
+		{   CTRL_BUTTON,//评分打印--->评分设置
 			WS_VISIBLE | WS_TABSTOP, WS_EX_NONE,
 			DLG_OFFSET * 2 + FETAL_GPH_WIDTH-10,
 			DLG_OFFSET * 2 + FHR_GPH_HEIGHT,
@@ -1280,15 +1818,16 @@ VOID FetalRecallDialog(HANDLE hOwner, INT16 index)
 			IDC_FETAL_RECALL_PRINTPAGE_B, STR_DLG_RECALL_PRINT_PAGE,
 			0L, 0L
 		},		
-		{   CTRL_BUTTON,
+		{   CTRL_BUTTON,//详细信息
 			WS_VISIBLE | WS_TABSTOP, WS_EX_NONE,
 			DLG_OFFSET * 2 + FETAL_GPH_WIDTH-10,
 			DLG_OFFSET * 3 + FHR_GPH_HEIGHT + KEY_HEIGHT,
 			REMAIN_WIDTH,
 			KEY_HEIGHT,
-			IDC_FETAL_RECALL_PRINTALL_B, STR_DLG_RECALL_PRINT_ALL,
+			IDC_FETAL_RECALL_INFO_B, STR_DLG_RECALL_INFO,
 			0L, 0L
-		},	  
+		},
+		////////////
 		{   CTRL_BUTTON,
 			WS_VISIBLE | WS_TABSTOP, WS_EX_NONE,
 			DLG_OFFSET * 2 + FETAL_GPH_WIDTH-10,

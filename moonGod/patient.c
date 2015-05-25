@@ -220,7 +220,7 @@ INT16 ShowPatientInfoList(HWND hWnd, INT16 index, INT16 count)
 			break;
 		}
 		SetWindowText(hCtrl, STR_DLG_PNT_RECALL_PID0 + i);
-		EnableWindow(hCtrl, sPtnList[index + i].status == 'S');
+		//EnableWindow(hCtrl, sPtnList[index + i].status == 'S');
 	}
 	if (hCtrl = GetDlgItem(hWnd, IDC_PATIENT_RECALL_ALL_C))
 		EnableWindow(hCtrl, sPtnList[index].status == 'S');
@@ -417,7 +417,6 @@ VOID PtnRecallDlg_Init(HWND hWnd)
 		hCtrl = GetDlgItem(hWnd, i);
 		if (!hCtrl)
 			return;
-
 		SetWindowBkColor(hCtrl, ((PWIN)hWnd)->iBkColor);
 	}
 	

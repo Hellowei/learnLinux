@@ -12,9 +12,132 @@ typedef struct __tagAnalysisResult{
 	int fasthigh;	//加速时上升幅度
 	int tdfast;	  //心率加速次数
 	int tdslow;	  //心率减速次数
+	int fastType;		//加速类型 0没意义1周期性2散在性
+	int slowType;		//减速类型 0没意义1晚期减速2早期减速
+	int LDTime;			//晚期减速
+	int EDTime;			//早期减速
+	int VDTime;			//vd数
 }NST_RESULT;
 
 static NST_RESULT sNST;
+//@vinYin 2015-05-20 分析宫压曲线
+typedef struct _fastToco{
+		INT  maxPosX;
+		INT start;
+		INT end;
+}FASTTOCO;
+static void DealwithTOCO(unsigned char *toco, int len)
+{
+	INT loops = (len - 4);
+	INT count,tocoSum,j,averageToco;
+	count = tocoSum = 0;
+	for(j = 0; j < loops; j ++)
+	{
+		if(j >= 2400)
+			break;
+		tocoSum += toco[j];
+		count++;
+	}
+	averageToco = count?(tocoSum/count):0;
+	FASTTOCO fastToco[100] = {{0}};
+	UCHAR minHeight = 10;//高于此值才开始算加速
+	UCHAR averageHeight = 15;//加速平均高度不小于此值
+	UCHAR minWeight = 5;//宫压跨度至少应该大于此值
+	INT start,end,maxValue,maxPosX,fastTime;
+	start = end = maxValue = maxPosX = fastTime = tocoSum = 0;
+	for(j = 5; j < loops; j ++)
+	{
+		if (maxValue < toco[j] )
+		{
+			maxValue = toco[j];
+			maxPosX  = j;
+		}
+		if(toco[j]-averageToco > minHeight)//开始算加速
+		{	
+			tocoSum += (toco[j]-averageToco);
+			start = start?start:j;//
+		}
+		if(toco[j]-averageToco < minHeight && end == 0)//加速完成
+		{
+			end = j;
+		}
+		if (end != 0 && start == 0)
+			end = 0;
+		if (end != 0 && start != 0)
+		{	
+			j = (end > start)?end:start;
+			if(end - start > minWeight && tocoSum > (end - start)*averageHeight)
+			{
+				fastToco[fastTime].start = start;
+				fastToco[fastTime].end= end;
+				fastToco[fastTime].maxPosX = maxPosX;
+				fastTime++;
+			}
+			start = end = maxValue = maxPosX = tocoSum = 0;
+		}
+	}
+}
+//@vinYin 2015-05-20 分析宫压加速与胎心率关系 得出加、减速性质
+typedef struct _fastFhr{
+		INT maxPosX;
+		INT start;
+		INT end;
+	}FASTFHR;
+typedef struct _slowFhr{
+		INT maxPosX;
+		INT start;
+		INT downValue;//下降的振幅 早期晚期小于50 变异大于70
+		INT end;
+	}SLOWFHR;
+static void ChangeSpeedType(FASTFHR*fastFhr,SLOWFHR*slowFhr,FASTTOCO*fastToco,INT*changeSpeedType)
+{
+	INT count,i,j,cycleTime,lastIndex,allowError,noAllowError;
+	count = cycleTime = lastIndex = 0;
+	allowError = 5;//误差允许范围内认为是同一点
+	noAllowError = 10;//胎心率与宫压峰值位置大于此值认为不相关
+
+	{//分析加速与宫压关系 判断加速是否有周期性
+		for(i = 0;i < 100; i++)
+		{
+			if(fastFhr[i].maxPosX == 0)
+				break;
+			count++;
+			for(j = lastIndex;j < 100; j++)
+			{
+				if((fastToco[j].maxPosX - fastFhr[i].maxPosX > noAllowError)
+					|| (fastToco[j].maxPosX == 0))//没找到关联的点
+					break;
+				INT dMaxX = ABS(fastToco[j].maxPosX - fastFhr[i].maxPosX);
+				INT dStart = ABS(fastToco[j].start - fastFhr[i].start);
+				INT dEnd = ABS(fastToco[j].end - fastFhr[i].end);
+				if((dMaxX < allowError) &&(dStart < allowError) &&(dEnd  < allowError))
+				{
+					lastIndex = j;//提高算法查找速度
+					cycleTime++;
+				}
+			}
+		}
+		//如果每个加速找到宫压也加速的概率为0.5以上，即以为整体加速其有周期性
+		printf("fastFhr=%d,fastToco=%d %f\n",count,cycleTime,cycleTime/count);
+		changeSpeedType[0] = (count<cycleTime*2)?1:2;
+	}
+	
+	{//分析减速与宫压关系 判断减速是否早期减速 晚期减速 变异减速 其他减速
+		count = cycleTime = lastIndex = 0;
+		for(i = 0;i < 100; i++)
+		{
+			if(slowFhr[i].maxPosX == 0)
+				break;
+			count++;
+			for(j = lastIndex;j < 100; j++)
+			{
+				if((fastToco[j].maxPosX - slowFhr[i].maxPosX > noAllowError)
+					|| (fastToco[j].maxPosX == 0))//没找到关联的点
+					break;
+			}
+		}
+	}
+}
 
 static void InputData(unsigned char *fhr, int len, NST_RESULT *pRet)
 {
@@ -27,25 +150,30 @@ static void InputData(unsigned char *fhr, int len, NST_RESULT *pRet)
 	int tdfast = 0;	  //心率加速次数
 	int tdslow = 0;	  //心率减速次数
 	int slinetc = 0;
-
+	int fastType=0;		//加速类型 0没意义1周期性2散在性
+	int slowType=0;		//减速类型 0没意义1晚期减速2早期减速3变异减速4其他减速
+	int LDTime=0;			//晚期减速
+	int EDTime=0;			//早期减速
+	int VDTime=0;			//vd数
 	typedef struct myCTG{
 		unsigned char fhr;
-//		unsigned char fhr2;
-//		unsigned char toco;
-		unsigned char fm; //0x02 - jiasu,0x08 - jiansu
+		//unsigned char toco;
+		unsigned char fm; //0x02 - jiasu,0x08 - 减速
 	}SLINE;
+	SLOWFHR slowFhr[100] = {{0}};
+	FASTFHR fastFhr[100] = {{0}};
 	SLINE sline[2400] = {{0}};
 
 	int i, j, k;
 	int loops, count, sum;
-	int tdtc;
+	int tdtc;re
 
 	loops = (len - 4);
-	//	printf("len = %d\n", len);
+	printf("len = %d\n", len);
 	slinetc = 0;
 	for(j = 0; j < loops; j ++)
 	{
-		i = j;// (j + 5) / 10;
+		i = j;
 		if (i >= 2400)
 			break;
 		if(fhr[i]> 80 && fhr[i + 1] > 80 && fhr[i+2] > 80 && fhr[i+3] > 80)
@@ -58,11 +186,8 @@ static void InputData(unsigned char *fhr, int len, NST_RESULT *pRet)
 			fhr[i] = 0;
 		}
 		sline[i].fhr = fhr[i];
-		//		printf("sline[%d].fhr = %d\n", i, sline[i].fhr);
 		slinetc++;
 	}
-	//	printf("slinetc is %d\n", slinetc);
-	//  caculfhr_jx(this);
 	//  计算基线值
 	{
 		count = 0;
@@ -77,10 +202,8 @@ static void InputData(unsigned char *fhr, int len, NST_RESULT *pRet)
 		}
 		if (count > 0)
 			fhr_JX = sum / count;
-		//		printf("sum = %d, count = %d\n", sum , count);
 	}
 	//  分析加速
-	//  ansistdfast(this);
 	{
 		int sta1,sta2;
 		int start,end;
@@ -95,8 +218,7 @@ static void InputData(unsigned char *fhr, int len, NST_RESULT *pRet)
 		sta2 = FALSE;
 		start = 0;
 		end = 0;
-		//		printf("fhr_JX = %d\n", fhr_JX);
-		for(i = 5; i < slinetc - 130; i++)
+		for(i = 5; i < slinetc - 130; i++)//
 		{
 			maxfhr = 0;
 			maxx = 0;
@@ -107,33 +229,32 @@ static void InputData(unsigned char *fhr, int len, NST_RESULT *pRet)
 			{
 				for(j = i; j < i + 130;j++)//70
 				{
-					if(maxfhr < sline[j].fhr)
-					{
-						maxfhr = sline[j].fhr;
-						maxx=j;
-					}
+					//求积分 
 					if(sline[i].fhr+30 > sline[j].fhr //30 //20
 						&& sline[j].fhr > sline[i].fhr+3)
 					{
-						summ += sline[j].fhr -sline[i].fhr;//fhr_JX;
-//						printf("summ %d=%d sline[%d].fhr-%d fhr_JX\n",summ,sline[j].fhr,j,fhr_JX);
+						summ += sline[j].fhr -sline[i].fhr;
+						if(maxfhr < sline[j].fhr)
+						{
+							maxfhr = sline[j].fhr;
+							maxx=j;
+						}
 					}
 					if(sline[i].fhr >= sline[j].fhr)
 					{
 						if((summ > 380) && (maxfhr - fhr_JX > 15)//380,15
-							// && (sline[i].fhr+4 < sline[i+4].fhr)		
 							&& (((summ * 10) >> 3) > (j - i) * 10)
 							)
 						{
 							sline[maxx].fm |= 0x02;
 							fasttime1[tdtc] = j - i;
 							fasthigh1[tdtc] = maxfhr - sline[i].fhr;
-//							printf("j =%d, i = %d\n", j,i );
-//							printf("[i] = %d, [j] = %d\n", sline[i].fhr, sline[j].fhr);
+							fastFhr[tdtc].start = i;
+							fastFhr[tdtc].end   = j;
+							fastFhr[tdtc].maxPosX = maxx;
 							i = j;
 							tdtc ++;
-//							printf("maxfhr = %d\n", maxfhr);
-							break;//j = i + 200;
+							break;
 						}
 					}
 				}
@@ -175,11 +296,10 @@ static void InputData(unsigned char *fhr, int len, NST_RESULT *pRet)
 				{
 					if (sline[i].fhr > sline[i+j].fhr && sline[i+j].fhr>60)
 						sta1=FALSE;
-				}
-				for(j=1;j<35;j++)
-				{
 					if (sline[i].fhr > sline[i-j].fhr && sline[i-j].fhr>60)
 						sta2=FALSE;
+					if(FALSE == sta2 || FALSE == sta1 )
+						break;
 				}
 				if (sta1 && sta2 && (sline[i].fhr > 60) && (sline[i-2].fhr > 60)
 				&& (sline[i+2].fhr > 60))
@@ -221,6 +341,10 @@ static void InputData(unsigned char *fhr, int len, NST_RESULT *pRet)
 						sta2 = FALSE;
 					if (sta1 && sta2 && start + 35 < end)
 					{
+						slowFhr[tdtc].start = start;
+						slowFhr[tdtc].end   = end;
+						slowFhr[tdtc].maxPosX = i;
+						slowFhr[tdtc].downValue = fhr_JX - sline[i].fhr;//减速下降最大幅度
 						tdtc++;
 						sline[i].fm |= 0x08;
 						i += 60;
@@ -262,13 +386,8 @@ static void InputData(unsigned char *fhr, int len, NST_RESULT *pRet)
 		{
 			fhr_JX = sum / count;
 		}
-		else
-		{
-			printf("count = 0, fhr_JX didn't change!\r\n");
-		}
 	}
 	//  分析细变异
-	//  ansisLTV(this);
 	{
 		int maxx, minx, upp, dww, www, maxzq, maxzf, mzq;
 		BOOL nofind;
@@ -313,9 +432,10 @@ static void InputData(unsigned char *fhr, int len, NST_RESULT *pRet)
 				if(ABS(sline[i].fhr - sline[j].fhr) > 15)
 				{
 					nofind = TRUE;
-					j = i + 50;
+					break;//原来为j = i + 50;
 				}
 			}
+			i=j;//原来没有这句的,加上为了实现跳跃式统计
 			if(nofind == FALSE && maxx - minx < 30
 			&& upp > 5 && dww > 5 && www > 5)
 			{
@@ -331,12 +451,10 @@ static void InputData(unsigned char *fhr, int len, NST_RESULT *pRet)
 					maxzq = j * 0.7;
 
 				j = maxx - minx;
-//				printf("maxx = %d, minx = %d,j = %d\n",maxx,minx,j);
 
 				if (maxzf < j && maxzq > 2)
 				{
 					maxzf = j*0.8;
-//					printf("zf= %d\n",maxzf);
 				}
 			}
 		}
@@ -360,7 +478,7 @@ static void InputData(unsigned char *fhr, int len, NST_RESULT *pRet)
 			if (fhr_JX > sline[i].fhr)
 				count++;
 		}
-		count = 0;
+		count = 0;//这里又为0?
 		sum = 0;
 		if (count > slinetc / 2)
 		{
@@ -393,6 +511,11 @@ static void InputData(unsigned char *fhr, int len, NST_RESULT *pRet)
 	pRet->fasthigh  = fasthigh;	//加速时上升幅度
 	pRet->tdfast	= tdfast;	  //心率加速次数
 	pRet->tdslow	= tdslow;	  //心率减速次数
+	pRet->fastType = fastType;	  ///加速类型 0没意义1周期性2散在性
+	pRet->slowType = slowType;	  ///减速类型 0没意义1晚期减速2早期减速
+	pRet->LDTime = LDTime;	  //晚期减速
+	pRet->EDTime = EDTime;	  //早期减速
+	pRet->VDTime = VDTime;	  //vd数
 }
 
 
@@ -509,6 +632,9 @@ BOOL CstAnalyInProc(VOID)
 	printf("\n\t加速时间:\t%d\n\t加速幅度:\t%d" , sNST.fasttime, sNST.fasthigh);
 	printf("\n\t加速次数:\t%d\n\t减速次数:\t%d\n" , sNST.tdfast, sNST.tdslow);
 	printf("AnlsRet.second...%d\r\n", AnlsRet.second);
+	printf("加速类型=%d，减速类型=%d,晚期减速%d,早期减速%d vd数%d\n",
+		sNST.fastType, sNST.slowType, sNST.LDTime, sNST.EDTime, sNST.VDTime);
+	printf("打评分各个指标2015-05-18\n");
 	return TRUE;
 }
 
@@ -1077,7 +1203,7 @@ VOID AnalysisDialog(HANDLE hOwner)
 			COLUMN1, ROW_LINE1, WIDTH3, STATIC_HEIGHT,
 			IDC_ANALY_SETUP_INFO_DATA_L, STR_NULL,   0L, 0L},
 		{ CTRL_STATIC,  WS_VISIBLE | SS_SIMPLE, WS_EX_NONE,
-			COLUMN1, ROW_LINE1 + STATIC_HEIGHT, WIDTH3, STATIC_HEIGHT,
+			COLUMN1, ROW_LINE1 + STATIC_HEIGHT-2, WIDTH3, STATIC_HEIGHT,
 			IDC_ANALY_SETUP_INFO_VALID_L, STR_NULL, 0L, 0L},
 
 		{ CTRL_BUTTON,  WS_VISIBLE | WS_TABSTOP, WS_EX_NONE,
@@ -1166,7 +1292,7 @@ VOID AnalyInfoUpdate(VOID)
 		SetBrushColor(hdc, brColor);
 		SetBkColor(hdc, PIXEL_transparent);
 		SetTextColor(hdc, PIXEL_black);
-		sprintf(szInfo, "%s:	   %3d%%",
+		sprintf(szInfo, "%s:%3d%%",
 			LoadString(STR_DLG_ANALY_COLLECT), dataPercent);
 		TextOut(hdc, 1, 4, szInfo);
 		ReleaseDC(hdc);
@@ -1197,7 +1323,7 @@ VOID AnalyInfoUpdate(VOID)
 		SetBrushColor(hdc, brColor);
 		SetBkColor(hdc, PIXEL_transparent);
 		SetTextColor(hdc, PIXEL_black);
-		sprintf(szInfo, "%s:	   %3d%%",
+		sprintf(szInfo, "%s:%3d%%",
 			LoadString(STR_DLG_ANALY_VALID), validPercent);
 		TextOut(hdc, 1, 4, szInfo);
 		ReleaseDC(hdc);

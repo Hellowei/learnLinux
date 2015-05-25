@@ -30,6 +30,7 @@ typedef struct _fhr_config {
 	INT8	autoPrint;
 	INT8	printMode;
 	INT8	printLength;
+	INT8    defaultAnalyType;//用户保存的评分设置默认值
 }FHR_CONFIG;
 
 typedef struct _fhr_params {
@@ -114,7 +115,7 @@ FHR_EXTERN  FHR_PARAMS  FhrParams;
 #define  FHRACKINFO_EXIT_CRITICAL()	  // OSSemPost(FhrAckSem)
 
 #define  FHR_PARAM_RATE  4
-#define  FM_INTERVAL_LIMIT 50   // 胎监包每秒2个,10 = 5秒内胎动无效
+#define  FM_INTERVAL_LIMIT 10    // 胎监包每秒2个,10 = 5秒内胎动无效
 #define FHR_FACE_CTRL_NUM  6
 enum
 {
@@ -185,7 +186,7 @@ FHR_EXTERN DATETIME   FhrStartTime;
 #define FETAL_REAL_DATALEN  (WAVE_DIMENSIONS_W * FETAL_SAMPLE_RATE * 60 / 100)
 #define FETAL_REAL_LENGTH   WAVE_WIDTH
 #define REC_FHR_CURVE_POINTS	12
-#define   FHR_MAX_OFFSET	20
+#define   FHR_MAX_OFFSET	35
 
 typedef struct _fhr_wave
 {

@@ -480,11 +480,11 @@ static VOID SystemSetupInit(HWND hWnd, DWORD wParam, LPARAM lParam)
 
    if (MonitorInfo.inDemo)
    {
-        hCtrl = GetDlgItem(hWnd, IDC_SYSTEM_CONFIG_ALM_FHR_HI_SB);
-	    EnableWindow(hCtrl, FALSE);
+//        hCtrl = GetDlgItem(hWnd, IDC_SYSTEM_CONFIG_ALM_FHR_HI_SB);
+//	    EnableWindow(hCtrl, FALSE);
 
-        hCtrl = GetDlgItem(hWnd, IDC_SYSTEM_CONFIG_ALM_FHR_LO_SB);
-	    EnableWindow(hCtrl, FALSE);
+//        hCtrl = GetDlgItem(hWnd, IDC_SYSTEM_CONFIG_ALM_FHR_LO_SB);
+//	    EnableWindow(hCtrl, FALSE);
    }
    
     hCtrl = GetDlgItem(hWnd, IDC_SYSTEM_CONFIG_FETAL_VOL_CH_LB);
@@ -495,6 +495,8 @@ static VOID SystemSetupInit(HWND hWnd, DWORD wParam, LPARAM lParam)
 		if (0 == (hCtrl = GetDlgItem(hWnd, i))) continue;
 		SetWindowBkColor(hCtrl, ((PCONTROL)hWnd)->iBkColor);
 	}
+
+	
 	if (MonitorInfo.inDemo)
 	{
 		hCtrl = GetDlgItem(hWnd, IDC_SYSTEM_CONFIG_DEFAULT_B);
@@ -508,6 +510,7 @@ static VOID SystemSetupInit(HWND hWnd, DWORD wParam, LPARAM lParam)
 			EnableWindow(hCtrl, FALSE);
 		}
 	}
+	
 	
 //    if ((FhrConfig.mode != 2) && ((MonitorConfig.faceType == FACE_STD 
 //        || MonitorConfig.faceType == FACE_STD_SINGLE)))

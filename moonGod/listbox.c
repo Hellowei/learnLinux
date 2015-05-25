@@ -312,30 +312,21 @@ static  void  PaintFocusListbox (PCONTROL pctrl, HDC hdc )
 	RECT		 textClient_rc;
 	RECT		 bmp_rc;
 	char		*text;
-
 	ShowHelpString(pctrl, LISTBOX_HELPID(pctrl), LISTBOX_HELPSTR(pctrl));
 	PDC pdc = dc_HDC2PDC(hdc);
+	pdc->pLogFont = GetSystemFont(SYSLOGFONT_BIGFONT);
 
-	//printf("pctrl->id=%d,IDC_LANGUAGE_CHOICE_LB=%d\n",pctrl->id,IDC_LANGUAGE_CHOICE_LB);
-
-	//pdc->pLogFont = GetSystemFont(SYSLOGFONT_FIXED);//panhonghui	
 	//panhonghui
-    if (MonitorConfig.language == RUSSIAN)
-    {
-         pdc->pLogFont = GetSystemFont(SYSLOGFONT_NOR_RUS);	
-         //语言切换乱码
-        if (IDC_LANGUAGE_CHOICE_LB == pctrl->id)
-    	{
-            pdc->pLogFont = GetSystemFont(SYSLOGFONT_FIXED);
-    	}
+//    if (MonitorConfig.language == RUSSIAN)
+//    {
+//         pdc->pLogFont = GetSystemFont(SYSLOGFONT_NOR_RUS);	
+//    }
+//    else
+//    {
+//        pdc->pLogFont = GetSystemFont(SYSLOGFONT_FIXED);
 
-    }
-    else
-    {
-        pdc->pLogFont = GetSystemFont(SYSLOGFONT_FIXED);
+//    }
 
-    }
-    
 	GetListboxRect(pctrl, &client_rc, &text_rc, &textClient_rc, &bmp_rc, hdc);
 
 	PaintListboxBmp(pctrl, &bmp_rc, hdc);
@@ -372,7 +363,7 @@ static  void  PaintListboxInProcess (PCONTROL pctrl, HDC hdc)
 	}
 	
 	PDC pdc = dc_HDC2PDC(hdc);
-	pdc->pLogFont = GetSystemFont(SYSLOGFONT_WCHAR_DEF);
+	pdc->pLogFont = GetSystemFont(SYSLOGFONT_SMAFONT);
 	
 	GetListboxRect(pctrl, &client_rc, &text_rc, &textClient_rc, &bmp_rc, hdc);
 	PaintListboxFrame(hdc, TRUE, &client_rc, &bmp_rc);
@@ -408,17 +399,17 @@ static  void  PaintNormalListbox (PCONTROL pctrl, HDC hdc)
 
 	ShowHelpString(pctrl, LISTBOX_HELPID(pctrl), 0);
 	PDC pdc = dc_HDC2PDC(hdc);
-	//pdc->pLogFont = GetSystemFont(SYSLOGFONT_WCHAR_DEF);
-    if (MonitorConfig.language == RUSSIAN)
-    {
-         pdc->pLogFont = GetSystemFont(SYSLOGFONT_DEF_RUS);	
+	pdc->pLogFont = GetSystemFont(SYSLOGFONT_SMAFONT);
+//    if (MonitorConfig.language == RUSSIAN)
+//    {
+//         pdc->pLogFont = GetSystemFont(SYSLOGFONT_DEF_RUS);	
+//    }
+//    else
+//    {
+//        pdc->pLogFont = GetSystemFont(SYSLOGFONT_WCHAR_DEF);
 
-    }
-    else
-    {
-        pdc->pLogFont = GetSystemFont(SYSLOGFONT_WCHAR_DEF);
+//    }
 
-    }
 	GetListboxRect(pctrl, &client_rc, &text_rc, &textClient_rc, &bmp_rc, hdc);
 
 	//需要留出bmp区吗?

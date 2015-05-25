@@ -69,7 +69,10 @@ static INT16 sMapLanguage(INT16 choice)
 	for (i = 0; i < MAX_LANGUAGE; i++)
 	{
 		if (str_language[choice] == STR_DLG_LANGUAGE_ENGLISH + i)
+		{
 			break;
+
+		}
 	}
 	return i;
 }
@@ -87,14 +90,14 @@ BOOL LanguageSetupDLgOnCommand(HWND hWnd, WPARAM wParam, LPARAM lParam)
 				choice = MonitorConfig.language;
 				if (HIWORD(wParam) == LBN_CHANGED)
 				{
-
+                    printf("11\n");
 					choice = GetListBoxCurChoi(IDD_SETUP_LANGUAGE,
 						IDC_LANGUAGE_CHOICE_LB);
 					choice = sMapLanguage(choice);
 				}
 				if (HIWORD(wParam) == LBN_ENTER)
 				{
-				
+
 					choice = OnTouchListbox(hWnd, IDD_SETUP_LANGUAGE,
 						IDC_LANGUAGE_CHOICE_LB, STR_DLG_LANGUAGE_CHOICE);
                						
@@ -105,7 +108,21 @@ BOOL LanguageSetupDLgOnCommand(HWND hWnd, WPARAM wParam, LPARAM lParam)
 
 					LanChangeFlag = TRUE;
 					MonitorConfig.language = choice;
-				}
+        			if (LanChangeFlag)
+        			{
+        				LanChangeFlag = FALSE;
+        				ChoiceFont(MonitorConfig.language);
+        				PostMessage(SysGui_HTSK, MSG_GUI_LANG_CHANGE,
+        					MonitorConfig.language, 0);
+        				// 保存设置
+        				Save_Config(CFG_KEYID_LANGUAGE);
+        				ReInitGlobalStrPtr(MonitorConfig.language);
+        				SetFetalDetach(FhrConfig.detach);
+        				ShowPatinetInfo();
+        				StartLayoutSession();
+        				AlmGlbCtlr.LanChange = TRUE;
+        			}
+    			}
 
 			}
 			//SetFetalDetach(FhrConfig.detach);
@@ -180,21 +197,21 @@ BOOL LanguageSetupDLgOnCommand(HWND hWnd, WPARAM wParam, LPARAM lParam)
 			break;
 
 		case IDC_LANGUAGE_EXIT_B:
-			if (LanChangeFlag)
-			{
-				LanChangeFlag = FALSE;
-//				ChoiceFont(MonitorConfig.language);
-				PostMessage(SysGui_HTSK, MSG_GUI_LANG_CHANGE,
-					MonitorConfig.language, 0);
-				// 保存设置
-				Save_Config(CFG_KEYID_LANGUAGE);
-				ReInitGlobalStrPtr(MonitorConfig.language);
-				SetFetalDetach(FhrConfig.detach);
-				ShowPatinetInfo();
-				StartLayoutSession();
-				AlmGlbCtlr.LanChange = TRUE;
-			}
-			else
+//			if (LanChangeFlag)
+//			{
+//				LanChangeFlag = FALSE;
+//				//ChoiceFont(MonitorConfig.language);
+//				PostMessage(SysGui_HTSK, MSG_GUI_LANG_CHANGE,
+//					MonitorConfig.language, 0);
+//				// 保存设置
+//				Save_Config(CFG_KEYID_LANGUAGE);
+//				ReInitGlobalStrPtr(MonitorConfig.language);
+//				SetFetalDetach(FhrConfig.detach);
+//				ShowPatinetInfo();
+//				StartLayoutSession();
+//				AlmGlbCtlr.LanChange = TRUE;
+//			}
+//			else
 			{
 				EndDialog(hWnd, IDOK);
 			}

@@ -42,7 +42,6 @@ static INT32 OnClickGraphProcDialog(HWND parent, HWND crtrl, LPARAM lParam)
 
 static INT32 OnClickFhrSetupDialog(HWND parent, HWND crtrl, LPARAM lParam)
 {
-    printf("hehehe\n");
     parent = parent;
     crtrl  = crtrl;
     lParam = lParam;
@@ -108,7 +107,7 @@ INT32 OnClickPatientSetupDialog(HWND parent, HWND crtrl, LPARAM lParam)
     crtrl  = crtrl;
     lParam = lParam;
     if ((HWND)GetTopWndItem(IDD_PATIENT_SETUP) == HWND_INVALID && _menu_lev <= 0)
-        PatientSetupDialog(0);
+       PatientSetupDialog(0);
     return 0;
 }
 

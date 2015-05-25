@@ -12,7 +12,7 @@ enum keyboard_size{
 	DLG_KB_W_SF   = DLG_KB_W * 6, // sixfold,for space
 };
 
-#define NUMPAD_CAPTION_MAXLEN ((DLG_KB_OFFSET *  4 - 10) / 8)
+#define NUMPAD_CAPTION_MAXLEN ((DLG_KB_OFFSET *  4 - 10) / 8)+64//add by panhonghui
 #define KEYBRD_CAPTION_MAXLEN ((DLG_KB_OFFSET * 10 - 10) / 8)
 #define NUMPAD_VARIANT_MAXLEN 10
 #define KB_IME_PY_CHARNUM	 (KEYBOARD_CN8 - KEYBOARD_CN1 + 1)

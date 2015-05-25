@@ -157,10 +157,6 @@ char *FetalIndemoPacket()
             Toco_DemoReadP ++;
             if (Toco_DemoReadP > Toco_DemoTail)
                 Toco_DemoReadP = Toco_DemoHead;
-
-//            Afm_DemoReadP ++;
-//            if (Afm_DemoReadP > Afm_DemoTail)
-//                Afm_DemoReadP = Afm_DemoHead;
         }
     }
     return sDemoPacket;
@@ -196,13 +192,12 @@ static INT16 GetWavePos(INT32 height, INT16 value, INT16 max, INT16 min)
     {
         return -1;
     }
-	else if (value == max)
+	else if (value == max )
 	{
 		return 1;
 	}
     else
     {
-        //INT32 height = back->cy;
         return (INT16)(height - ((value - min) * height) / (max - min));
     }
 }
@@ -212,13 +207,7 @@ static BOOL InitFetalModule(VOID)
     return InitFhrModule();
 }
 
-static VOID printf_color(UCHAR type)
-{
-    printf("type...%d", type);
-    printf(":%s, ", CLR_STRING(sGphClr[type].brfhr));
-    printf(" %s, ", CLR_STRING(sGphClr[type].bkfhr));
-    printf(" %s\n", CLR_STRING(sGphClr[type].dwfhr));
-}
+
 
 VOID ReInitFhrGphMem(UCHAR type)
 {
@@ -231,8 +220,7 @@ VOID ReInitFhrGphMem(UCHAR type)
     if ((type == 0) && (MonitorConfig.MonitorName == MONITOR_TYPE_AR2))
         type = 2;  /* 针对Artemis2的屏幕不能很好区分WEC_EXCOLOR_BLACK3
         和WEC_EXCOLOR_BLACK2,将原填充颜色改为WEC_EXCOLOR_BLACK1 */
-        
-    //printf_color(type);
+ 
     bmp = GetSystemIcon(IDI_FHR_GPH);
     SetRect(&rc, 0, 0, bmp.width, bmp.height);
     this->SetMenory(this, &FhrBitmapMemory);
@@ -462,7 +450,9 @@ VOID SaveFhrRealData(VOID)
     }
     return;
 }
-
+//2015-05-14@VinYin 修复胎心率曲线掉点问题，原因从缓冲池读数据的速度快于写数据，
+//导致写数据下标呈跳跃式递增，从而缓冲池存在垃圾数据，解决方式,缓冲池跳跃部分用插值替换垃圾数据
+static INT16 sg_curSavePosX = 0;//把串口数据写到缓冲池时的下标
 static VOID SetWavePos(PFHRWAVE this, INT16 xpos, FETALWAVEDATA *ptr)
 {
     INT16 fhr1, fhr2, toco, afm;
@@ -471,6 +461,7 @@ static VOID SetWavePos(PFHRWAVE this, INT16 xpos, FETALWAVEDATA *ptr)
     toco = (INT16)ptr->toco;
     afm  = (INT16)ptr->afm;
     xpos = ABS(xpos) % WAVE_WIDTH;
+    sg_curSavePosX = xpos;//更新写进缓冲池的下标进度
     this->yPos[WAVE_FHR_CH1][xpos] =
         GetWavePos(this->fhr_back->cy - 1,  fhr1, 240,  30);
 
@@ -480,22 +471,49 @@ static VOID SetWavePos(PFHRWAVE this, INT16 xpos, FETALWAVEDATA *ptr)
     this->yPos[WAVE_TOCO][xpos]    =
         GetWavePos(this->toco_back->cy - 2, toco, 100,   0);
 	
-//    if (this->yPos[WAVE_TOCO][xpos] < 0)	// 总是显示宫压线,即使没有数据
-//    {
-//        this->yPos[WAVE_TOCO][xpos] = this->toco_back->cy - 2;
-//    }
-    this->yPos[WAVE_AFM][xpos]     = //this->toco_back->cy / 2 -
+    this->yPos[WAVE_AFM][xpos]     = 
         GetWavePos(this->toco_back->cy * 4 / 10, ptr->afm,   40,   0);
 
+    //打点标志间隔作限制,丢掉过于频繁的点
+   	static INT16 zeroPosX = 0;
+    static INT16 fmbitsPosX = 0;
+    static INT16 afmbitsPosX = 0;
+    static INT16 eventPosX = 0;
+    if (ABS(xpos)%((INT16)WAVE_WIDTH) > (WAVE_WIDTH - 2))//走完一圈,重设
+    {
+    	zeroPosX = 0;
+      	fmbitsPosX = 0;
+     	afmbitsPosX = 0;
+     	eventPosX = 0;
+    }
     ZeroMemory(&(this->marks[(xpos + 1) % WAVE_WIDTH]), sizeof(MARKEVENT));
     this->marks[xpos].zerobits  |= ptr->zerobits;
+    if((ABS(xpos-zeroPosX) > 16 || (xpos == zeroPosX)) && this->marks[xpos].zerobits)
+    	zeroPosX = xpos;
+    else
+    	this->marks[xpos].zerobits = 0;
+    	
     this->marks[xpos].fmbits    |= ptr->fmbits;
+    if((ABS(xpos-fmbitsPosX) > 8 || (xpos == fmbitsPosX)) && this->marks[xpos].fmbits)
+    	fmbitsPosX = xpos;
+    else
+    	this->marks[xpos].fmbits = 0;
+    	
     this->marks[xpos].afmbits   |= ptr->afmbits;
+    if((ABS(xpos-afmbitsPosX) > 8 || (xpos == fmbitsPosX)) && this->marks[xpos].afmbits)
+    	afmbitsPosX = xpos;
+    else
+    	this->marks[xpos].afmbits = 0;
+    	
     if (ptr->event > 0 && ptr->event < 16)
-    {
+    {	
         this->marks[xpos].eventbits = 1;
         this->marks[xpos].event = ptr->event;
     }
+    if((ABS(xpos-eventPosX) > 16 || (xpos == eventPosX)) && this->marks[xpos].eventbits)
+    	eventPosX = xpos;
+    else
+    	this->marks[xpos].eventbits = 0;
 }
 
 static VOID UpdateWavePos(PFHRWAVE this, int start, FETALWAVEDATA *pData)
@@ -563,12 +581,6 @@ VOID UpdateFetalWavePos(PFHRWAVE this,BOOL refresh)
         this->drawFlag = FALSE;
         offset = -FetalWavePageOffset[this->PgNdx];
         pWavePtr = this->pPage;
-//        for (i = 0; i < WAVE_MAX; i++)
-//        {
-//            for (j = 0; j < WAVE_WIDTH; j++)
-//                this->yPos[i][j] = 0;
-//        }
-        //memset(this->yPos, 0xff, WAVE_MAX*WAVE_WIDTH*sizeof(INT16));
         if (this->PgNdx == 0)//当前实时刷新重绘,需要前页数据,并重定xPos
         {
             this->xPos = 0;
@@ -661,30 +673,15 @@ VOID PutFhrValue(FHR_PARAMS * params)
     tocoEff = CheckRangeExceed(PARAM_LMTS_TOCO, &toco);
     afmEff  = CheckRangeExceed(PARAM_LMTS_AFM,  &afm);
 
-    //TriggerAlarm(fhr1Eff, STR_ALM_FHR1_EXCEED);
     FhrParams.fhr1 = fhr1;
 
-    //TriggerAlarm(fhr2Eff, STR_ALM_FHR2_EXCEED);
     FhrParams.fhr2 = fhr2;
 
-    //TriggerAlarm(tocoEff, STR_ALM_TOCO_EXCEED);
     FhrParams.toco = toco;
-    //printf("FhrParams.toco=%d\n",FhrParams.toco);
 
     FhrParams.afm  = afm;
     CheckRangeExceed(PARAM_LMTS_FM, &fm);
     FhrParams.fm  = fm;
-    /** /
-    FetalWaveBuffWritePtr++;
-    if (FetalWaveBuffWritePtr > FetalWaveBuffTailPtr)
-    {
-        prinfo("Pre HeadPtr, TailPtr, WritePtr...%p,%p,%p\r\n",
-                FetalWaveBuffHeadPtr, FetalWaveBuffTailPtr, FetalWaveBuffWritePtr);
-        FetalWaveBuffWritePtr = FetalWaveBuffHeadPtr;
-    }
-    /**/
-//    prinfo("WritePtr...%p\r\n", FetalWaveBuffWritePtr);
-//    printf("Datetime.second %d\n", DateTime.second);
     PFHRWAVE this			= FetalWavePrint;
     this->pCurr				= FetalWaveBuffWritePtr;
     this->pCurr->fhr1Eff	= (fhr1Eff == 0) & 0x01;
@@ -699,21 +696,6 @@ VOID PutFhrValue(FHR_PARAMS * params)
     this->pCurr->zerobits	= ((FhrParams.mark & 0x02) > 0) & 0x01;
     
 	FetalSampleInSecond++;
-//    if (this->pCurr->fmbits)
-//    {
-//        prinfo("#%02d:%02d:%02d#this->pCurr->fmbits\r\n", DateTime.hour, DateTime.minute, DateTime.second);
-//    }
-//    if (this->pCurr->afmbits)
-//    {
-//        prinfo("#%02d:%02d:%02d#this->pCurr->afmbits\r\n", DateTime.hour, DateTime.minute, DateTime.second);
-//    }
-//    prinfo("this...%p, FetalWaveBuffWritePtr...%p\r\n", this, FetalWaveBuffWritePtr);
-//    if (this->pCurr->event)
-//    {
-//        prinfo("#%02d:%02d:%02d#this->pCurr->event:%d\r\n",
-//            DateTime.hour, DateTime.minute, DateTime.second, this->pCurr->event);
-//    }
-//	PutFetalWave();
     if (this->drawFlag)
     {
         UpdateFetalWavePos(this, FALSE);
@@ -762,8 +744,6 @@ static VOID FetalModuleAlarm(SENSORINDEX id, STRINGID strid)
 VOID PutFhrStatusByte(UINT8 status1,UINT8 status2)
 {
     static UINT8 LastStat1, LastStat2;
-    //prinfo("status1, status2...%02X, %02X\r\n", status1, status2);
-    //prinfo("FhrParams.fhr1, FhrParams.fhr2...%d, %d\r\n", FhrParams.fhr1, FhrParams.fhr2);
     if (((status1 & 0x03) < 2 && FhrParams.fhr1 > 29) && (FhrConfig.mode != 1))
     {
         if ((LastStat1 & 0x03) != (status1 & 0x03))
@@ -787,18 +767,16 @@ VOID PutFhrStatusByte(UINT8 status1,UINT8 status2)
     {
         TriggerAlarm(FALSE, STR_ALM_FHR2_LOW_SIGNAL);
     }
-//    
+
     if ((status2 & 0x01) != (LastStat2 & 0x01))
     {
-//        TriggerAlarm(!(status2 & 0x01), STR_ALM_FHR1_SENSOR_OFF);
 		if (status2 & 0x01)
 	        TriggerAlarm(FALSE, STR_ALM_FHR1_SENSOR_OFF);
 		else
 			FetalModuleAlarm(SENSOR_FHR_CH1, STR_ALM_FHR1_SENSOR_OFF);
     }
-    if ((status2 & 0x08) != (LastStat2 & 0x08)) //&& (FhrConfig.mode > 0))
+    if ((status2 & 0x08) != (LastStat2 & 0x08))
     {
-//        TriggerAlarm(!(status2 & 0x08), STR_ALM_FHR2_SENSOR_OFF);
 		if (status2 & 0x08)
 	        TriggerAlarm(FALSE, STR_ALM_FHR2_SENSOR_OFF);
 		else
@@ -806,7 +784,6 @@ VOID PutFhrStatusByte(UINT8 status1,UINT8 status2)
     }
     if ((status2 & 0x02) != (LastStat2 & 0x02))
     {
-//        TriggerAlarm(!(status2 & 0x02), STR_ALM_TOCO_SENSOR_OFF);
 		if (status2 & 0x02)
 			TriggerAlarm(FALSE, STR_ALM_TOCO_SENSOR_OFF);
 		else
@@ -814,12 +791,10 @@ VOID PutFhrStatusByte(UINT8 status1,UINT8 status2)
     }
     if ((status2 & 0x04) != (LastStat2 & 0x04))
     {
-//        TriggerAlarm(!(status2 & 0x04), STR_ALM_FM_SENSOR_OFF);
 		if (status2 & 0x04)
 			TriggerAlarm(FALSE, STR_ALM_FM_SENSOR_OFF);
 		else
 		{
-//			printf("status2::%02X\n", status2);
 			FetalModuleAlarm(SENSOR_FM, STR_ALM_FM_SENSOR_OFF);
 		}
     }
@@ -869,7 +844,6 @@ VOID SetFetalDetach(BOOL detach)
         ReInitFhrGphMem(!MonitorConfig.nightModeOn);
         if ((!detach) || (FhrConfig.mode < 2))
         {
-            //ReDrawFetalWave(FetalWavePrint);
             return;
         }
         PFBMEM  this = &FbMem;
@@ -879,14 +853,11 @@ VOID SetFetalDetach(BOOL detach)
         this->SetForeColor(this, GetWindowElementColor(WEC_EXCOLOR_ORANGE));
         this->SetMenory(this, &FhrBitmapMemory);
         text = LoadString(STR_DLG_FHR_DETACH_SPLINE);
-        //strcat(text,": 20");
-        this->SetFont(this, GetSystemFont(SYSLOGFONT_WCHAR_DEF));
+        this->SetFont(this, GetSystemFont(SYSLOGFONT_SMAFONT));
         GetTextExtentEx(this->pLogfont, text, -1, &size);
         x = DLG_OFFSET;
         y = FhrBitmapMemory.cy / 2;
         this->TextOut(this, x, y, text);
-
-        //ReDrawFetalWave(FetalWavePrint);
     }
 }
 
@@ -908,6 +879,8 @@ VOID SetFetalMonitorDemoStyle(BOOL isDemo)
         this->SetForeColor(this, GetWindowElementColor(WEC_EXCOLOR_ORANGE));
         this->SetMenory(this, &FhrBitmapMemory);
         text = LoadString(STR_DLG_SETUP_DEMO);
+        this->SetFont(this, GetSystemFont(SYSLOGFONT_BIGFONT));
+
         GetTextExtentEx(this->pLogfont, text, -1, &size);
         x = DLG_OFFSET;
         y = DLG_OFFSET;
@@ -1074,7 +1047,6 @@ VOID DateCalc(DATETIME *ptime, INT32 dayOffset)
     }
 }
 
-// type: [hHmMsS] default s, offset type
 VOID TimeCalc(DATETIME * ptime, INT32 offset, CHAR type)
 {
     INT32 hour, minute, second;
@@ -1139,7 +1111,6 @@ VOID TimeCalc(DATETIME * ptime, INT32 offset, CHAR type)
     ptime->minute = minute;
     ptime->second = second;
     DateCalc(ptime, day);
-    //返回计算结果
 }
 
 static VOID DrawBackground(PFHRWAVE this)
@@ -1224,23 +1195,14 @@ static VOID PrintMark(HDC hdc, PFHRWAVE this, UINT16 dLen, CHAR type)
             drColor = PIXEL_white;// (MonitorConfig.nightModeOn) ? PIXEL_white : PIXEL_black;
             style = SS_SIMPLE;
             drColor = SetTextColor(hdc, drColor);
-//            count = 0;
             for (i = this->xPos; i < dLen + this->xPos; i++)
             {
-//                if (count > 0)
-//                {
-//                    count ++;
-//                    if (count < 12)
-//                        continue;
-//                    count = 0;
-//                }
                 ndx = i % WAVE_WIDTH;
                 if(this->marks[ndx].analybits)
                 {
                     if(this->marks[ndx].analy)
                     {
                         pStr = LoadString(AnalyStrID[this->marks[ndx].analy]);
-//                        count ++;
                         PutFetalMark(hdc, ndx, drPos, style, (INT32)pStr);
                     }
                 }
@@ -1256,26 +1218,15 @@ static VOID PrintMark(HDC hdc, PFHRWAVE this, UINT16 dLen, CHAR type)
             drColor2 = (MonitorConfig.nightModeOn) ? PIXEL_black : PIXEL_white;
             style = SS_SIMPLE;
             drColor = SetTextColor(hdc, drColor);
-//            count = 0;
             drColor2 = SetBkColor(hdc, drColor2);
-//            prinfo("dLen, this->xPos...%d, %d\r\n", dLen, this->xPos);
             for (i = this->xPos; i < dLen + this->xPos; i++)
             {
-//                if (count > 0)
-//                {
-//                    count ++;
-//                    if (count < 14)
-//                        continue;
-//                    count = 0;
-//                }
                 ndx = i % WAVE_WIDTH;
                 if((this->marks[ndx].eventbits) && (this->marks[ndx].event))
                 {
-//                    prinfo("this->marks[%d].event...%d\r\n", ndx, this->marks[ndx].event);
                     if (this->marks[ndx].event < TABLESIZE(EventStrID))
                     {
                         pStr = LoadString(EventStrID[this->marks[ndx].event]);
-//                        count ++;
                         PutFetalMark(hdc, ndx - 12, drPos, style, (INT32)pStr);
                     }
                 }
@@ -1294,21 +1245,12 @@ static VOID PrintMark(HDC hdc, PFHRWAVE this, UINT16 dLen, CHAR type)
             icon_id = IDI_NM;
             drColor = SetPenColor(hdc, drColor);
             offset = (GetSystemIcon(icon_id).width + 1) / 2;
-//            count = 0;
             for (i = this->xPos; i < dLen + this->xPos; i++)
             {
-//                if (count > 0)
-//                {
-//                    count ++;
-//                    if (count < 14)
-//                        continue;
-//                    count = 0;
-//                }
                 ndx = i % WAVE_WIDTH;
 				if (ndx < 16) ndx = WAVE_WIDTH;
                 if(this->marks[ndx].zerobits)
                 {
-//                    count ++;
                     if (ndx < WAVE_WIDTH)
                     {
                         PutFetalMark(hdc, ndx - 16, drPos, style, icon_id);
@@ -1330,26 +1272,16 @@ static VOID PrintMark(HDC hdc, PFHRWAVE this, UINT16 dLen, CHAR type)
             drColor = SetBkColor(hdc, drColor);
             drColor = SetBrushColor(hdc, drColor2);
             offset = (GetSystemIcon(icon_id).width + 1) / 2;
-//            count = 0;
             for (i = this->xPos; i < dLen + this->xPos; i++)
             {
-//                if (count > 0)
-//                {
-//                    count ++;
-//                    if (count < 14)
-//                        continue;
-//                    count = 0;
-//                }
                 ndx = i % WAVE_WIDTH;
 				if (ndx < 8) ndx = WAVE_WIDTH - 8;
                 if(this->marks[ndx].fmbits)
                 {
-//                    count ++;
                     PutFetalMark(hdc, ndx - 8, drPos, style, icon_id);
                 }
                 if(this->marks[ndx].afmbits)
                 {
-//                    count ++;
                     PutFetalMark(hdc, ndx - 8, drPos + 48, style, icon_id);
                 }
             }
@@ -1372,15 +1304,7 @@ static VOID PrintFhrWave(HDC hdc, PFHRWAVE this, UINT16 dLen)
     GAL_PIXEL color;
     if (dLen == 0)
     {
-        /*/
-        if (this->pPage == this->pCurr)
-            return;
-        if (this->pCurr - this->pPage < 0)
-            return;
-        /*/
         dLen = WAVE_WIDTH - 2;
-//        dLen = WAVE_WIDTH - 2 - this->xPos;
-//        if (!dLen)return;
     }
     if (FhrConfig.mode != 1)
     {
@@ -1414,23 +1338,24 @@ static VOID PrintFhrWave(HDC hdc, PFHRWAVE this, UINT16 dLen)
                 {
                     thisNdx += WAVE_WIDTH;
                 }
+                if (sg_curSavePosX < thisNdx)
+            		this->yPos[WAVE_FHR_CH1][thisNdx] = this->yPos[WAVE_FHR_CH1][sg_curSavePosX];
             }
             thispos = this->yPos[WAVE_FHR_CH1][thisNdx];
             lastpos = this->yPos[WAVE_FHR_CH1][lastNdx];
             if (thispos > 0 &&  thisNdx > lastNdx)
             {
+         
                 if (lastpos > 0 && ABS(thispos - lastpos) < FHR_MAX_OFFSET)
                 {
-                    //D3DLine(hdc, 1, lastNdx, lastpos, thisNdx, thispos);
                     DrawLine(hdc, lastNdx, lastpos, thisNdx, thispos);
-                    //Line(hdc, lastNdx, lastpos, thisNdx, thispos);
                 }
                 else
                 {
                     DrawLine(hdc, thisNdx, thispos-1, thisNdx, thispos);
-                    //Rect(hdc, this->xPos - 1, thispos,this->xPos, thispos - 1);
                 }
             }
+        
         }
     }
     if (FhrConfig.mode > 0)
@@ -1465,41 +1390,24 @@ static VOID PrintFhrWave(HDC hdc, PFHRWAVE this, UINT16 dLen)
                 {
                     thisNdx += WAVE_WIDTH;
                 }
+                if (sg_curSavePosX < thisNdx)
+            		this->yPos[WAVE_FHR_CH2][thisNdx] = this->yPos[WAVE_FHR_CH2][sg_curSavePosX];
             }
-            if (!FhrConfig.detach){
-                thispos = this->yPos[WAVE_FHR_CH2][thisNdx];
-                lastpos = this->yPos[WAVE_FHR_CH2][lastNdx];
-
-                if (thispos > 0 &&  thisNdx > lastNdx)
+          
+           const INT16 deltaY = (FhrConfig.detach)?(23):(0);//实际23才对应屏幕20,有误差
+           thispos = this->yPos[WAVE_FHR_CH2][thisNdx] + deltaY;
+           lastpos = this->yPos[WAVE_FHR_CH2][lastNdx] + deltaY;
+		   if (thispos > deltaY &&  thisNdx > lastNdx)
+            {
+                if (lastpos > deltaY && ABS(thispos - lastpos) < FHR_MAX_OFFSET)
                 {
-                    if (lastpos > 0 && ABS(thispos - lastpos) < FHR_MAX_OFFSET)
-                    {
-                        //D3DLine(hdc, 1, lastNdx, lastpos, thisNdx, thispos);
-                        DrawLine(hdc, lastNdx, lastpos, thisNdx, thispos);
-                    }
-                    else
-                    {
-                        DrawLine(hdc, thisNdx, thispos - 1, thisNdx, thispos);
-                    }
+                    DrawLine(hdc, lastNdx, lastpos, thisNdx, thispos);
+                }
+                else
+                {
+                    DrawLine(hdc, thisNdx, thispos-1, thisNdx, thispos);
                 }
             }
-            else{
-                thispos = this->yPos[WAVE_FHR_CH2][thisNdx] + 23;
-                lastpos = this->yPos[WAVE_FHR_CH2][lastNdx] + 23;
-                
-                if (thispos > 23 &&  thisNdx > lastNdx)
-                {
-                    if (lastpos > 23 && ABS(thispos - lastpos) < FHR_MAX_OFFSET)
-                    {
-                        //D3DLine(hdc, 1, lastNdx, lastpos, thisNdx, thispos);
-                        DrawLine(hdc, lastNdx, lastpos, thisNdx, thispos);
-                    }
-                    else
-                    {
-                        DrawLine(hdc, thisNdx, thispos - 1, thisNdx, thispos);
-                    }
-                }
-           }    
         }
     }
     PrintMark(hdc, this, dLen, FETAL_MARK_EVENT);
@@ -1515,14 +1423,9 @@ static VOID PrintTocoWave(HDC hdc, PFHRWAVE this, UINT16 dLen)
     GAL_PIXEL color;
     if (dLen == 0)
     {
-        /*/
-        if (this->pPage == this->pCurr)
-            return;
-        if (this->pCurr - this->pPage < 0)
-            return;
-        /*/
         dLen = WAVE_WIDTH - 2;
     }
+    //宫压曲线
     color = GetWindowElementColor(MonitorConfig.colorParam[PARA_BLOCK_TOCO]);//PIXEL_green;
     color = SetPenColor(hdc, color);
     for (i = 0; i < dLen; i++)
@@ -1552,12 +1455,14 @@ static VOID PrintTocoWave(HDC hdc, PFHRWAVE this, UINT16 dLen)
             {
                 thisNdx += WAVE_WIDTH;
             }
+            if (sg_curSavePosX < thisNdx)
+            	this->yPos[WAVE_TOCO][thisNdx] = this->yPos[WAVE_TOCO][sg_curSavePosX];
         }
+        
         thispos = this->yPos[WAVE_TOCO][thisNdx];
         lastpos = this->yPos[WAVE_TOCO][lastNdx];
         if (thispos > -1 && lastpos > -1)
         {
-            //D3DLine(hdc, 1, this->xPos - 1, lasttoco, this->xPos, thispos);
             if (thisNdx > lastNdx)
             {
                 DrawLine(hdc, lastNdx, lastpos, thisNdx, thispos);
@@ -1565,10 +1470,10 @@ static VOID PrintTocoWave(HDC hdc, PFHRWAVE this, UINT16 dLen)
         }
     }
     SetPenColor(hdc, color);
-    // 显示打标和宫压归零标记
+    // 显示胎动打标和宫压归零标记
     PrintMark(hdc, this, dLen, FETAL_MARK_ZERO);
     PrintMark(hdc, this, dLen, FETAL_MARK_FM);
-#if 1
+	//胎动曲线
     color = GetWindowElementColor(MonitorConfig.colorParam[PARA_BLOCK_FM]);
     SetPenColor(hdc, color);
     for (i = 0; i < dLen; i++)
@@ -1598,21 +1503,19 @@ static VOID PrintTocoWave(HDC hdc, PFHRWAVE this, UINT16 dLen)
             {
                 thisNdx += WAVE_WIDTH;
             }
+            if (sg_curSavePosX < thisNdx)
+            	this->yPos[WAVE_AFM][thisNdx] = this->yPos[WAVE_AFM][sg_curSavePosX];
         }
         thispos = this->yPos[WAVE_AFM][thisNdx];
         lastpos = this->yPos[WAVE_AFM][lastNdx];
-//        prinfo("draw afm thispos, lastpos...%d, %d\r\n", thispos, lastpos);
-//        prinfo("FhrParams.afm.....%d\r\n", FhrParams.afm);
         if (thispos > -1 && lastpos > -1)
         {
-            //D3DLine(hdc, 1, this->xPos - 1, lastafm, this->xPos, thispos);
             if (thisNdx > lastNdx)
             {
                 DrawLine(hdc, lastNdx, lastpos, thisNdx, thispos);
             }
         }
     }
-#endif
 }
 
 static RefreshWave(PFHRWAVE this)
@@ -1631,7 +1534,6 @@ static RefreshWave(PFHRWAVE this)
 
 static PrintWave(PFHRWAVE this)
 {
-    //this->drawFlag   = FALSE;
     UINT16 step;
     HDC hdc;
     step = GetFetalPos();
@@ -1791,7 +1693,6 @@ VOID EraseWavesBuffer(VOID)
 			this->yPos[i][j] = -1;
 		}
 	}
-//    ZeroMemory(this->yPos, sizeof(INT16) * WAVE_MAX * WAVE_WIDTH);
     this->pHead     = FetalWaveBuffHeadPtr;
     this->pTail     = FetalWaveBuffTailPtr;
     this->pPage     = FetalWaveBuffWritePtr;
