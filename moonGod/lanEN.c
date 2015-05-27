@@ -358,6 +358,7 @@ char en_us_string[STR_MAXNUM][150] = {
 	[STR_DLG_ANLS_TOCO] = "FM Frequency",
 	[STR_DLG_ANLS_ANALYSIS_RESULT] = "Scoring Result",
 	[STR_DLG_ANLS_DIAGNOSIS] = "Diagnosis Result",
+	[STR_DLG_ANLS_DIAGNOSIS] = "Õï¶Ï½á¹û:",
 	[STR_DLG_ANLS_SIGNATURE] = "Signature:",
 	[STR_DLG_ANLS_DATE] = "Date:",
 	[STR_DLG_05MIN] = "5min",

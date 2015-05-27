@@ -376,25 +376,31 @@ static VOID ShowPationInfo(HWND hWnd)
 
 static VOID FetalRecallShow(HWND hWnd)
 {
+	printf("点击历史open  dead here UUUUUUUU000\n");
 	HWND hCtrl;
 	HDC hdc;
 	RECT rc;
 	int x, y, offset;
 	if (hCtrl = GetDlgItem(hWnd, IDC_FETAL_RECALL_FHRGPH_L))
-	{
+	{	printf("UUUUUUUU111\n");
 		SetRect(&rc, 0, 0, RecallFhrBmpMem.cx, RecallFhrBmpMem.cy + 1);
 		hdc = GetDC(hCtrl);
 		FillRectEx(hdc, &rc, RecallFhrBmpMem.cx, RecallFhrBmpMem.data);
 		ReleaseDC(hdc);
+		printf("UUUUUUUU222\n");
 	}
+	
 	if (hCtrl = GetDlgItem(hWnd, IDC_FETAL_RECALL_TOCOGPH_L))
-	{
+	{	printf("UUUUUUUU333\n");
 		SetRect(&rc, 0, 0, RecallTOCOBmpMem.cx, RecallTOCOBmpMem.cy + 1);
 		hdc = GetDC(hCtrl);
 		FillRectEx(hdc, &rc, RecallTOCOBmpMem.cx, RecallTOCOBmpMem.data);
 		ReleaseDC(hdc);
+		printf("UUUUUUUU444\n");
 	}
+	printf("UUUUUUUU5555\n");
 	RefreshRecallGraph(hWnd);
+		printf("UUUUUUssssssssssUU\n");
 }
 
 static VOID DispAnalysis(HDC hdc, PRECT prc, ARET_SAVE *pRet)
@@ -413,7 +419,7 @@ static VOID DispAnalysis(HDC hdc, PRECT prc, ARET_SAVE *pRet)
 
 	//适应俄语界面调整
 	Rect(hdc, x, y, x + 80 * 5, y + KEY_HEIGHT * 6+KEY_HEIGHT*1.8);
-	
+	printf("rrrr(%d,%d)\n",x,y);
 	Line(hdc, x, y + KEY_HEIGHT * 1+KEY_HEIGHT*0.3*1, x + 80 * 5, y + KEY_HEIGHT * 1+KEY_HEIGHT*0.3*1);
 	Line(hdc, x, y + KEY_HEIGHT * 2+KEY_HEIGHT*0.3*2, x + 80 * 5, y + KEY_HEIGHT * 2+KEY_HEIGHT*0.3*2);
 	Line(hdc, x, y + KEY_HEIGHT * 3+KEY_HEIGHT*0.3*3, x + 80 * 5, y + KEY_HEIGHT * 3+KEY_HEIGHT*0.3*3);
@@ -744,11 +750,9 @@ static VOID DispAnalysisFischer(HDC hdc, PRECT prc, ARET_SAVE *pRet)
 }
 
 
-
 //Krebs评分方法 @vinyin 2015-05-05
 static VOID DispAnalysisKrebs(HDC hdc, PRECT prc, ARET_SAVE *pRet)
 {
-	printf("Krebs评分方法\n");
 	INT32 x = prc->left + DLG_OFFSET;
 	INT32 y = prc->top + DLG_OFFSET/2;
 	INT32 y1;
@@ -937,7 +941,6 @@ static VOID DispAnalysisKrebs(HDC hdc, PRECT prc, ARET_SAVE *pRet)
 //cst评分方法 @vinyin 2015-05-05
 static VOID DispAnalysisCST(HDC hdc, PRECT prc, ARET_SAVE *pRet)
 {
-	printf("CST评分方法\n");
 	INT32 x = prc->left + DLG_OFFSET;
 	INT32 y = prc->top + DLG_OFFSET;
 	INT32 y1;
@@ -999,7 +1002,7 @@ static VOID DispAnalysisCST(HDC hdc, PRECT prc, ARET_SAVE *pRet)
 	SetRect(&rc, x, y + KEY_HEIGHT * 1.33*5, x + deltaWidth, y + KEY_HEIGHT * 1.33*6);
 	sprintf(txt, "%s",LoadString(STR_DLG_ANLS_LDOROTHER));
 	TextOutCenterLen(hdc, &rc, txt, strlen(txt));
-	//从上到下是 1分 100~119,161~180 有胎动无加速 无变化 
+	//从上到下是 1分 100~119,161~180
 	x += deltaWidth;
 	SetRect(&rc, x, y , x + deltaWidth, y + KEY_HEIGHT* 1.33);
 	sprintf(txt, "%s", "1");
@@ -1154,7 +1157,6 @@ static VOID DispPationAnalysis(HDC hdc, PRECT prc, ARET_SAVE *pRet)
 	};
 	switch (FhrConfig.defaultAnalyType)
 	{
-		
 		case NST_SHOW_ANALYSIS:
 			DispAnalysis(hdc, prc, pRet);
 		break;
@@ -1169,7 +1171,6 @@ static VOID DispPationAnalysis(HDC hdc, PRECT prc, ARET_SAVE *pRet)
 		break;
 		default:
 		break;
-		printf("cur analytype=%d\n",FhrConfig.defaultAnalyType);
 	}
 	// 恢复现场
 	pdc->pLogFont = pFont;
@@ -1266,7 +1267,6 @@ static VOID ShowPatientAnalysis(HWND hWnd, int show)
 	{
 		EnableWindow(hCtrl, !show);
 	}
-	printf("qqqqqqqqcur show =%d FALSE = %d TRUE = %d\n",show,FALSE,TRUE);
 	if (show == FALSE)
 	{
 		if (RecallAnalyGphMem.data)
@@ -1286,8 +1286,7 @@ static VOID ShowPatientAnalysis(HWND hWnd, int show)
 	}
 	else
 	{
-		if (TRUE == show)
-			fb_getmem(rc.left, rc.top,RecallAnalyGphMem.cx, RecallAnalyGphMem.cy, RecallAnalyGphMem.data);
+		fb_getmem(rc.left, rc.top,RecallAnalyGphMem.cx, RecallAnalyGphMem.cy, RecallAnalyGphMem.data);
 		DispPationAnalysis(hdc, (PRECT)&rc,
 			(ARET_SAVE*)(RecallPatientPtr->ansis.buffer));
 	}
@@ -1419,6 +1418,8 @@ static VOID FetalRecallInit(HWND hWnd)
 	}
 	RecallInfoFlag = FALSE;
 	RecallAnalyFlag = FALSE;
+	//得到用户上次设置的评分法
+	FhrConfig.defaultAnalyType = FhrConfig.defaultAnalyType?FhrConfig.defaultAnalyType:1;
 	RecallPage = 0;
 	i = RecallPatientPtr->data.info[0].count;		   // 数据长度/时间长度(s)
 	i = (i + 59) / 60;								  // 时间长度(m)
@@ -1440,9 +1441,7 @@ static VOID FetalRecallInit(HWND hWnd)
 			PageIndex[i] = (ndx + i * RECALL_PAGE_STEP) % DATA_SAVE_LEN;
 		}
 	}
-
 	InitInfoText(&(RecallPatientPtr->info));
-
 	if (hCtrl = GetDlgItem(hWnd, IDC_FETAL_RECALL_SCROLL_L))
 	{
 		SetWindowBkColor(hCtrl, ((PCONTROL)hWnd)->iBkColor);
@@ -1452,28 +1451,34 @@ static VOID FetalRecallInit(HWND hWnd)
 		SetWindowBkColor(hCtrl, ((PCONTROL)hWnd)->iBkColor);
 		EnableWindow(hCtrl, (RecallPatientPtr->ansis.len > 0));
 	}
+		printf("init recallanalyflag=false444444444\n");
 	if (hCtrl = GetDlgItem(hWnd, IDC_FETAL_RECALL_INFO_B))
 	{
 		SetWindowBkColor(hCtrl, ((PCONTROL)hWnd)->iBkColor);
 	}
+		printf("init recallanalyflag=false5555555555\n");
 	if (hCtrl = GetDlgItem(hWnd, IDC_FETAL_RECALL_PAGEUP_B))
 	{
 		SetWindowBkColor(hCtrl, ((PCONTROL)hWnd)->iBkColor);
 	}
+		printf("init recallanalyflag=false66666666\n");
 	if (hCtrl = GetDlgItem(hWnd, IDC_FETAL_RECALL_PAGEDN_B))
 	{
 		SetWindowBkColor(hCtrl, ((PCONTROL)hWnd)->iBkColor);
 	}
+		printf("init recallanalyflag=false999999999999999\n");
 	if (hCtrl = GetDlgItem(hWnd, IDC_FETAL_RECALL_PRINTPAGE_B))
 	{
 		SetWindowBkColor(hCtrl, ((PCONTROL)hWnd)->iBkColor);
 		EnableWindow(hCtrl, (RecallPatientPtr->ansis.len > 0));
 		//EnableWindow(hCtrl, FALSE); //去掉评分打印
 	}
+		printf("init recallanalyflag=false8888888888\n");
 	if (hCtrl = GetDlgItem(hWnd, IDC_FETAL_RECALL_PRINTALL_B))
 	{
 		SetWindowBkColor(hCtrl, ((PCONTROL)hWnd)->iBkColor);
 	}
+		printf("init recallanalyflag=false00000000\n");
 }
 //设置默认的评分方法
 static BOOL ChoseAnalysDlg_OnCommand(HWND hWnd, DWORD choiceID)
@@ -1496,7 +1501,6 @@ static BOOL ChoseAnalysDlg_OnCommand(HWND hWnd, DWORD choiceID)
 		case IDC_ANALY_SETUP_SONWINDOW_BUT5://按下确认
 			if(FhrConfig.defaultAnalyType != s_lastChoseGrade)
 			{
-				printf("save%d ------> %d\n",FhrConfig.defaultAnalyType,s_lastChoseGrade);
 				FhrConfig.defaultAnalyType = s_lastChoseGrade;
 				Save_Config(CFG_KEYID_DEFAULTANALYTYPE);
 			}
@@ -1510,10 +1514,7 @@ static BOOL ChoseAnalysDlg_OnCommand(HWND hWnd, DWORD choiceID)
 }
 static void ChoseAnalyDefaultWindowInit(HWND hWnd)
 {	
-	//得到用户上次设置的评分法
-	FhrConfig.defaultAnalyType = FhrConfig.defaultAnalyType?FhrConfig.defaultAnalyType:1;
-	s_lastChoseGrade = FhrConfig.defaultAnalyType;//FhrConfig.defaultAnalyType?FhrConfig.defaultAnalyType:-1;
-	//printf("初始化20150518*****%d******+界面啦\n",staticSame);
+	s_lastChoseGrade = FhrConfig.defaultAnalyType;
 	HWND hCtrl;
 	INT32 i;
 	for (i = IDC_ANALY_SETUP_SONWINDOW_BUT1; i <= IDC_ANALY_SETUP_SONWINDOW_BUT5; i++)
@@ -1633,12 +1634,13 @@ VOID SetDefaultAnalyDialog(HANDLE hOwner)
 static BOOL FetalRecallOnCommand(HWND hWnd, WORD ctrl, WORD code)
 {
 	BOOL ret = TRUE;
-	printf("ctrl = %d RecallAnalyFlag =%d IDC_FETAL_RECALL_PRINTPAGE_B=%d\n",ctrl,RecallAnalyFlag,IDC_FETAL_RECALL_PRINTPAGE_B);
+	//printf("ctrl = %d RecallAnalyFlag =%d IDC_FETAL_RECALL_PRINTPAGE_B=%d\n",ctrl,RecallAnalyFlag,IDC_FETAL_RECALL_PRINTPAGE_B);
 	switch (ctrl)
 	{
 		case IDC_FETAL_RECALL_ANALY_B:
 			//modify by vinyin2015-05-05!RecallAnalyFlag;从单一评分拓展到4种评分
 			RecallAnalyFlag = !RecallAnalyFlag;
+			printf("你好RecallAnalyFlag=%d\n",RecallAnalyFlag);
 			ShowPatientAnalysis(hWnd, RecallAnalyFlag);
 			break;
 			
@@ -1663,7 +1665,8 @@ static BOOL FetalRecallOnCommand(HWND hWnd, WORD ctrl, WORD code)
 			break;
 
 		case IDC_FETAL_RECALL_PRINTALL_B://全部打印
-			RecordService(REC_RECALL_ALL);
+			printf("全部打印\n");
+		 	RecordService(REC_RECALL_ALL);
 			break;
 
 		case IDC_FETAL_RECALL_EXIT_B:
@@ -1686,8 +1689,11 @@ FetalRecallProc(HWND hWnd, INT32 message, WPARAM wParam, LPARAM lParam)
 			break;
 
 		case MSG_SHOWWINDOW:
+			printf("MSG_SHOWWINDOW111\n");
 			FetalRecallShow(hWnd);
+			printf("MSG_SHOWWINDOW222\n");
 			ShowPationInfo(hWnd);
+			printf("MSG_SHOWWINDOW333\n");
 			break;
 
 		case MSG_COMMAND:

@@ -776,11 +776,14 @@ VOID EndPatientFile(VOID)
 
 INT32 ConfirmNoAnalysis(HWND hParentWnd)
 {
+	printf("// 有效数据不足时不需要确认评分111\n");
 	if (!get_analysis_enable())
 		return TRUE;
+	printf("// 有效数据不足时不需要确认评分222\n");
 	// 有效数据不足时不需要确认评分
 	if (AnalyConfig.nr_valid < 1190)
 		return TRUE;
+	printf("// 有效数据不足时不需要确认评分333333\n");
 	return MessageBox(hParentWnd,
 			STR_MSGBOX_PRO_CONFIRM_ANALYSIS1, STR_MSGBOX_PRO_CONFIRM_ANALYSIS2,
 			STR_DLG_PATIENT_SAVE, MB_ALIGNCENTER | MB_YESNO, SysGui_HTSK);
@@ -813,6 +816,7 @@ static INT16   Patient_OnCommand (HWND hWnd, DWORD wParam, LPARAM lParam)
 		case IDC_PATIENT_SETUP_NEWPATIENT_B:
 			if (FmsPtr->GetCurrSaveIndex(FmsPtr) < 0)//
 			{
+				printf("按下病人归档或新病人?111111\n");
 				NewPatient();
 				FmsPtr->NewPatient(FmsPtr);
 				InsertNewPatientID(1);
@@ -825,9 +829,12 @@ static INT16   Patient_OnCommand (HWND hWnd, DWORD wParam, LPARAM lParam)
 			}
 			else
 			{
+				printf("按下病人归档或新病人?1222222\n");
 				if (IDNO == ConfirmNoAnalysis(hWnd))
 					break;
+				printf("按下病人归档或新病人?4444444\n");
 				EndPatientFile();
+				printf("按下病人归档或新病人?5555555555\n");
 				SetEditText(IDD_PATIENT_SETUP, IDC_PATIENT_SETUP_NAME_EDIT, "");
 				SetEditText(IDD_PATIENT_SETUP, IDC_PATIENT_SETUP_ID_EDIT, "");
 				SetEditText(IDD_PATIENT_SETUP, IDC_PATIENT_SETUP_NOTE_EDIT, "");
@@ -837,9 +844,11 @@ static INT16   Patient_OnCommand (HWND hWnd, DWORD wParam, LPARAM lParam)
 				SetEditText(IDD_PATIENT_SETUP, IDC_PATIENT_SETUP_GTIMES_EDIT, "");
 				strcpy(LoadString(STR_MAIN_TOPBAR_NAME_NAME), PatientInfo.patientName);
 				strcpy(LoadString(STR_MAIN_TOPBAR_ID_NUM), PatientInfo.patientID);
+				printf("按下病人归档或新病人?877777777\n");
 				EnbPatientInfoEditFlag(FALSE);
 				SetWindowText(GetDlgItem(hWnd, IDC_PATIENT_SETUP_NEWPATIENT_B),
 					STR_MAIN_BOTTOM_NEWPATIENT);
+				printf("按下病人归档或新病人?888888\n");
 			}
 			break;
 

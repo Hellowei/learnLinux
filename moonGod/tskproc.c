@@ -730,6 +730,7 @@ INT32  RecTskProc (HANDLE hdl, INT32 msg, UINT32 wParam, UINT32 lParam)
 					break;
 
 				case REC_FETAL_RECALL:
+				     
 					RecDealWithEvents(REC_EVENT_FETAL);
 					break;
 
@@ -746,6 +747,7 @@ INT32  RecTskProc (HANDLE hdl, INT32 msg, UINT32 wParam, UINT32 lParam)
 					break;
 
 				case REC_RECALL_ALL:
+					printf("¥Ú«Æ+REC_RECALL_ALLREC_RECALL_ALL++++++ %d¢\n",REC_EVENT_RECALLALL);
 					RecDealWithEvents(REC_EVENT_RECALLALL);
 					break;
 

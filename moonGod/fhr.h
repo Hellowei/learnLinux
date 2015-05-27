@@ -30,7 +30,7 @@ typedef struct _fhr_config {
 	INT8	autoPrint;
 	INT8	printMode;
 	INT8	printLength;
-	INT8    defaultAnalyType;//用户保存的评分设置默认值
+	INT8    defaultAnalyType;//用户保存的评分设置默认值 1 2 3 4
 }FHR_CONFIG;
 
 typedef struct _fhr_params {

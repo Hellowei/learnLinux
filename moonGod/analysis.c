@@ -16,132 +16,15 @@ typedef struct __tagAnalysisResult{
 	int slowType;		//减速类型 0没意义1晚期减速2早期减速
 	int LDTime;			//晚期减速
 	int EDTime;			//早期减速
-	int VDTime;			//vd数
+	int VDTime;			//vd数*/
 }NST_RESULT;
 
 static NST_RESULT sNST;
-//@vinYin 2015-05-20 分析宫压曲线
-typedef struct _fastToco{
-		INT  maxPosX;
-		INT start;
-		INT end;
-}FASTTOCO;
-static void DealwithTOCO(unsigned char *toco, int len)
-{
-	INT loops = (len - 4);
-	INT count,tocoSum,j,averageToco;
-	count = tocoSum = 0;
-	for(j = 0; j < loops; j ++)
-	{
-		if(j >= 2400)
-			break;
-		tocoSum += toco[j];
-		count++;
-	}
-	averageToco = count?(tocoSum/count):0;
-	FASTTOCO fastToco[100] = {{0}};
-	UCHAR minHeight = 10;//高于此值才开始算加速
-	UCHAR averageHeight = 15;//加速平均高度不小于此值
-	UCHAR minWeight = 5;//宫压跨度至少应该大于此值
-	INT start,end,maxValue,maxPosX,fastTime;
-	start = end = maxValue = maxPosX = fastTime = tocoSum = 0;
-	for(j = 5; j < loops; j ++)
-	{
-		if (maxValue < toco[j] )
-		{
-			maxValue = toco[j];
-			maxPosX  = j;
-		}
-		if(toco[j]-averageToco > minHeight)//开始算加速
-		{	
-			tocoSum += (toco[j]-averageToco);
-			start = start?start:j;//
-		}
-		if(toco[j]-averageToco < minHeight && end == 0)//加速完成
-		{
-			end = j;
-		}
-		if (end != 0 && start == 0)
-			end = 0;
-		if (end != 0 && start != 0)
-		{	
-			j = (end > start)?end:start;
-			if(end - start > minWeight && tocoSum > (end - start)*averageHeight)
-			{
-				fastToco[fastTime].start = start;
-				fastToco[fastTime].end= end;
-				fastToco[fastTime].maxPosX = maxPosX;
-				fastTime++;
-			}
-			start = end = maxValue = maxPosX = tocoSum = 0;
-		}
-	}
-}
-//@vinYin 2015-05-20 分析宫压加速与胎心率关系 得出加、减速性质
-typedef struct _fastFhr{
-		INT maxPosX;
-		INT start;
-		INT end;
-	}FASTFHR;
-typedef struct _slowFhr{
-		INT maxPosX;
-		INT start;
-		INT downValue;//下降的振幅 早期晚期小于50 变异大于70
-		INT end;
-	}SLOWFHR;
-static void ChangeSpeedType(FASTFHR*fastFhr,SLOWFHR*slowFhr,FASTTOCO*fastToco,INT*changeSpeedType)
-{
-	INT count,i,j,cycleTime,lastIndex,allowError,noAllowError;
-	count = cycleTime = lastIndex = 0;
-	allowError = 5;//误差允许范围内认为是同一点
-	noAllowError = 10;//胎心率与宫压峰值位置大于此值认为不相关
 
-	{//分析加速与宫压关系 判断加速是否有周期性
-		for(i = 0;i < 100; i++)
-		{
-			if(fastFhr[i].maxPosX == 0)
-				break;
-			count++;
-			for(j = lastIndex;j < 100; j++)
-			{
-				if((fastToco[j].maxPosX - fastFhr[i].maxPosX > noAllowError)
-					|| (fastToco[j].maxPosX == 0))//没找到关联的点
-					break;
-				INT dMaxX = ABS(fastToco[j].maxPosX - fastFhr[i].maxPosX);
-				INT dStart = ABS(fastToco[j].start - fastFhr[i].start);
-				INT dEnd = ABS(fastToco[j].end - fastFhr[i].end);
-				if((dMaxX < allowError) &&(dStart < allowError) &&(dEnd  < allowError))
-				{
-					lastIndex = j;//提高算法查找速度
-					cycleTime++;
-				}
-			}
-		}
-		//如果每个加速找到宫压也加速的概率为0.5以上，即以为整体加速其有周期性
-		printf("fastFhr=%d,fastToco=%d %f\n",count,cycleTime,cycleTime/count);
-		changeSpeedType[0] = (count<cycleTime*2)?1:2;
-	}
-	
-	{//分析减速与宫压关系 判断减速是否早期减速 晚期减速 变异减速 其他减速
-		count = cycleTime = lastIndex = 0;
-		for(i = 0;i < 100; i++)
-		{
-			if(slowFhr[i].maxPosX == 0)
-				break;
-			count++;
-			for(j = lastIndex;j < 100; j++)
-			{
-				if((fastToco[j].maxPosX - slowFhr[i].maxPosX > noAllowError)
-					|| (fastToco[j].maxPosX == 0))//没找到关联的点
-					break;
-			}
-		}
-	}
-}
-
-static void InputData(unsigned char *fhr, int len, NST_RESULT *pRet)
+static void InputData(unsigned char *fhr,unsigned char *toco, int len, NST_RESULT *pRet)
 {
-
+	time_t now;
+	now = time(NULL);
 	int fhr_JX = 0;	  //心率基线
 	int fhr_QV = 0;	  //周期变异
 	int fhr_ZV = 0;	  //振幅变异
@@ -152,28 +35,39 @@ static void InputData(unsigned char *fhr, int len, NST_RESULT *pRet)
 	int slinetc = 0;
 	int fastType=0;		//加速类型 0没意义1周期性2散在性
 	int slowType=0;		//减速类型 0没意义1晚期减速2早期减速3变异减速4其他减速
-	int LDTime=0;			//晚期减速
-	int EDTime=0;			//早期减速
-	int VDTime=0;			//vd数
+	UCHAR EDTime = 0;//早期减速
+	UCHAR LDTime = 0;//晚期减速
+	UCHAR VDTime = 0;//变异减速
 	typedef struct myCTG{
 		unsigned char fhr;
-		//unsigned char toco;
+		unsigned char toco;
 		unsigned char fm; //0x02 - jiasu,0x08 - 减速
 	}SLINE;
+	typedef struct _fastFhr{
+		INT maxPosX;
+		INT start;
+		INT end;
+	}FASTFHR;
+	typedef struct _slowFhr{
+		INT maxPosX;
+		INT start;
+		INT downValue;//下降的振幅 早期晚期小于50 变异大于70
+		INT end;
+	}SLOWFHR;
 	SLOWFHR slowFhr[100] = {{0}};
 	FASTFHR fastFhr[100] = {{0}};
 	SLINE sline[2400] = {{0}};
-
+	
 	int i, j, k;
 	int loops, count, sum;
-	int tdtc;re
+	int tdtc;
 
 	loops = (len - 4);
-	printf("len = %d\n", len);
 	slinetc = 0;
 	for(j = 0; j < loops; j ++)
 	{
 		i = j;
+		//胎心率相关的
 		if (i >= 2400)
 			break;
 		if(fhr[i]> 80 && fhr[i + 1] > 80 && fhr[i+2] > 80 && fhr[i+3] > 80)
@@ -186,9 +80,11 @@ static void InputData(unsigned char *fhr, int len, NST_RESULT *pRet)
 			fhr[i] = 0;
 		}
 		sline[i].fhr = fhr[i];
+		if((toco[i] <= 0 || toco[i] >= 100) && i > 0)//丢弃异常值
+			toco[i] = toco[i-1];
 		slinetc++;
 	}
-	//  计算基线值
+	//  计算基线值 和宫压滤波
 	{
 		count = 0;
 		sum = 0;
@@ -199,10 +95,90 @@ static void InputData(unsigned char *fhr, int len, NST_RESULT *pRet)
 				sum += sline[i].fhr;
 				count++;
 			}
+				//宫压相关的
+			sline[i].toco = (unsigned char)(((int)toco[i]+(int)toco[i+1]+(int)toco[i+2]+(int)toco[i+3])
+			>>2);//平滑滤波
 		}
 		if (count > 0)
 			fhr_JX = sum / count;
 	}
+	//宫压的加速(峰值、拐点)
+	typedef struct {
+		INT startPosX;//宫压开始加速位置
+		INT endPosX;///加速结束位置
+		INT maxPosX;//峰值位置
+		INT maxValue;//加速峰值
+		INT averageValue;//宫压基线。
+	}TOCOADDSPEED;
+	TOCOADDSPEED tocoAddSpeed[100] = {{0}};
+	{
+		INT MINTIME = 60;//加速最短时间阈值
+		INT MINDELTAVALUE = 20;//最小峰值阈值
+		INT start,end,max,maxValue;
+		INT addSpeedTime = 0;//宫压加速次数
+		INT squreToco = 0;//宫压加速积分
+		BOOL isAlwayUP = FALSE;
+		//宫压加速分析思路参考胎心加速的,把出现上升趋的点作为起点开始试探
+		//从而找出峰值，结束点
+		INT AVERAGEADDSPEEDTIME = 200;//200find one addspeed
+		for(i = 5; i < slinetc - AVERAGEADDSPEEDTIME; i++)
+		{	
+			start = i;
+			squreToco = end=max=maxValue= 0;
+			isAlwayUP = FALSE;
+			printf("cur i=%d\n",i);
+			//出现上升趋势 都和[i]比较避免锯齿带来的影响
+			if(sline[i + 2].toco > sline[i].toco + 1
+				&& sline[i + 1].toco > sline[i].toco
+				&& sline[i + 3].toco > sline[i].toco + 2)
+			{
+				for(j=i;j <i + AVERAGEADDSPEEDTIME;j++)
+				{
+					if(maxValue <= sline[j].toco)//找峰值
+					{
+						maxValue = sline[j].toco;
+						max = j;
+					}
+					printf("i=%d ,j=%d maxValue=%d\n",i,j,maxValue);
+					squreToco += (sline[j].toco-sline[i].toco);
+					if(sline[i].toco > sline[j].toco)//找到加速结束时间,忽略加速过程有宫压调零发生
+					{
+					printf("oooooooooK %d %d (%d %d) squreToco=%d\n",maxValue,sline[i].toco,j,i,squreToco);
+						if((maxValue-sline[i].toco>MINDELTAVALUE)&&(j-i>MINTIME)
+						 &&(squreToco>(j-i)*(maxValue-sline[i].toco)/2))
+						 {
+						 	tocoAddSpeed[addSpeedTime].startPosX = start;
+						 	tocoAddSpeed[addSpeedTime].endPosX = j;
+						 	tocoAddSpeed[addSpeedTime].maxPosX = max;
+						 	tocoAddSpeed[addSpeedTime].maxValue= maxValue;
+						 	tocoAddSpeed[addSpeedTime].averageValue = sline[i].toco;
+						 	addSpeedTime++;
+						 	if(addSpeedTime>=100)
+						 	{
+						 		addSpeedTime = 100;
+						 	}
+						 }
+						 i = j;
+						 break;
+					}
+					//一直在加速的情况
+					if(j - i + 2 > AVERAGEADDSPEEDTIME)
+						isAlwayUP = TRUE;
+				}
+			}
+			if (isAlwayUP)
+				 i = i+AVERAGEADDSPEEDTIME/3;//i = j;会导致跳过部分加速尾段仍高于开始的情况
+		}
+		#if 1
+		for(i = 0 ;i < addSpeedTime;i++)
+		{
+			printf("宫压%d加速from (%d,%d)(%d,%d)  Max=(%d,%d)\n",i+1,tocoAddSpeed[i].startPosX,tocoAddSpeed[i].averageValue,tocoAddSpeed[i].endPosX
+				,tocoAddSpeed[i].averageValue,tocoAddSpeed[i].maxPosX,tocoAddSpeed[i].maxValue);
+		}
+		printf("宫压加速次数%d \n",addSpeedTime);
+		#endif
+	}
+	
 	//  分析加速
 	{
 		int sta1,sta2;
@@ -235,7 +211,7 @@ static void InputData(unsigned char *fhr, int len, NST_RESULT *pRet)
 					{
 						summ += sline[j].fhr -sline[i].fhr;
 						if(maxfhr < sline[j].fhr)
-						{
+						{ 
 							maxfhr = sline[j].fhr;
 							maxx=j;
 						}
@@ -273,6 +249,10 @@ static void InputData(unsigned char *fhr, int len, NST_RESULT *pRet)
 			fasthigh = fasthigh / (tdtc);
 		}
 		tdfast = tdtc;
+		for(i = 0;i < tdfast;i++)
+		{
+			printf("第%d加速胎心 (%d,maxPosx=%d ,%d)\n",i,fastFhr[i].start ,fastFhr[i].maxPosX,fastFhr[i].end);
+		}
 	}
 
 	//  分析减速
@@ -282,7 +262,6 @@ static void InputData(unsigned char *fhr, int len, NST_RESULT *pRet)
 		unsigned long ucstarttime;
 		int sta1,sta2;
 		int start,end;
-
 		tdtc=0;
 		tdslow = 0;
 		for(i = 55; i < slinetc - 75; i++)
@@ -353,6 +332,84 @@ static void InputData(unsigned char *fhr, int len, NST_RESULT *pRet)
 			}
 		}
 		tdslow = tdtc;
+		for(i = 0;i < tdslow;i++)
+		{
+			printf("第%d减速胎心 (%d,maxPosx =%d ,%d)\n",i,slowFhr[i].start ,slowFhr[i].maxPosX,slowFhr[i].end);
+		}
+	}
+	printf("分析加速、减速和宫压的关系，得出其性质\n");
+/////分析加速、减速和宫压的关系，得出其性质
+	{
+		UCHAR cycleTime = 0;
+		for(i = 0 ;i < 100;i++)
+		{
+			if(tocoAddSpeed[i].maxValue == 0)
+				break;
+			for(j=0;j<tdfast;j++)//加速
+			{
+				if(fastFhr[j].maxPosX == 0)
+					break;//已统计
+				if(fastFhr[j].start > tocoAddSpeed[i].endPosX)
+					break;//加速和当前的宫压不存在关系
+				printf("是否周期性%d %d\n",(fastFhr[j].maxPosX>tocoAddSpeed[i].startPosX),(fastFhr[j].maxPosX<tocoAddSpeed[i].endPosX));
+				if((fastFhr[j].maxPosX>tocoAddSpeed[i].startPosX)&&(fastFhr[j].maxPosX<tocoAddSpeed[i].endPosX))//两峰相对	
+				{
+					printf("是周期性%d %d %d\n",j,fastFhr[j].start,fastFhr[j].end);
+					fastFhr[j].maxPosX = 0;
+					cycleTime++;
+					break;
+				}
+			}
+			for(j=0;j<tdslow;j++)//减速
+			{
+				if(slowFhr[j].maxPosX == 0)
+					break;//已统计
+				if(slowFhr[j].start-tocoAddSpeed[i].endPosX > 40)
+					break;//减速和当前的宫压不存在关系
+				//变异减速:下降大于70，与宫压无相关关系
+				if(slowFhr[j].downValue > 70 )
+				{
+					slowFhr[j].maxPosX = 0;
+					VDTime++;
+					break;
+				}
+				//早期减速:两峰两对，胎心下降不超50
+printf("是否早期减速:%d %d %d\n",j,fastFhr[j].maxPosX>tocoAddSpeed[i].startPosX,fastFhr[j].maxPosX<tocoAddSpeed[i].endPosX);
+			//	(slowFhr[j].maxPosX > tocoAddSpeed[i].startPosX)&&(slowFhr[j].maxPosX < tocoAddSpeed[i].endPosX
+				if((slowFhr[j].maxPosX > tocoAddSpeed[i].startPosX)&&(slowFhr[j].maxPosX < tocoAddSpeed[i].endPosX)
+					&& (slowFhr[j].downValue < 50))
+				{
+					slowFhr[j].maxPosX = 0;
+					EDTime++;
+					break;
+				}
+				//晚期减速:胎心下降在宫压峰值后，两峰相差30-60秒，胎心落后宫压，胎心下降不超50
+				if((slowFhr[j].maxPosX > tocoAddSpeed[i].endPosX)&& (slowFhr[j].downValue < 50))
+				{
+					slowFhr[j].maxPosX = 0;
+					LDTime++;
+					break;
+				}
+	
+			}
+		}
+		#if 1 
+		INT c = tdslow-EDTime-LDTime-VDTime;
+		printf("加速%d,周期加速%d 减速%d,早减%d,晚减%d,变减%d,其他%d\n",tdfast,cycleTime,
+			tdslow,EDTime,LDTime,VDTime,c);
+		//定义加速性质
+		if(tdfast > 0)//加速
+			fastType = (cycleTime*2 >= tdfast)?1:2;
+		//定义减速性质
+		if(tdslow> 0 && (EDTime*2 >= tdslow))//早减
+			slowType = 2;
+		else if(tdslow> 0 && (LDTime*2 >= tdslow))//晚减
+			slowType = 1;
+		else if(tdslow> 0 && (VDTime*2 >= tdslow))//变减
+			slowType = 3;
+		else if(tdslow> 0 && (c*2 >= tdslow))//其他
+			slowType = 4;
+		#endif
 	}
 	//  去掉加速减速,重新计算基线
 	{
@@ -387,6 +444,8 @@ static void InputData(unsigned char *fhr, int len, NST_RESULT *pRet)
 			fhr_JX = sum / count;
 		}
 	}
+	//  分析减速与加速的关系
+	
 	//  分析细变异
 	{
 		int maxx, minx, upp, dww, www, maxzq, maxzf, mzq;
@@ -512,11 +571,11 @@ static void InputData(unsigned char *fhr, int len, NST_RESULT *pRet)
 	pRet->tdfast	= tdfast;	  //心率加速次数
 	pRet->tdslow	= tdslow;	  //心率减速次数
 	pRet->fastType = fastType;	  ///加速类型 0没意义1周期性2散在性
-	pRet->slowType = slowType;	  ///减速类型 0没意义1晚期减速2早期减速
+	pRet->slowType = slowType;	  ///减速类型 0没意义1晚期减速2早期减速3变减4其他
 	pRet->LDTime = LDTime;	  //晚期减速
 	pRet->EDTime = EDTime;	  //早期减速
 	pRet->VDTime = VDTime;	  //vd数
-}
+}		
 
 
 #endif
@@ -611,7 +670,7 @@ INT32 GetTimeBeforeFm(INT32 second)
 
 BOOL CstAnalyInProc(VOID)
 {
-	InputData(sFetalData.frame.fhr, sFhrDiagnose.len, &sNST);
+	InputData(sFetalData.frame.fhr,sFetalData.frame.toco,sFhrDiagnose.len, &sNST);
 	time((time_t*)&AnlsRet.endtime);
 	AnlsRet.data_pct = ABS(sFhrDiagnose.len) * 100 / FHR_DIAGNOSE_SEND_FHR_NUM;
 	AnlsRet.vld_pct = AnalyConfig.nr_valid * 100 / FHR_DIAGNOSE_SEND_FHR_NUM;
@@ -634,7 +693,7 @@ BOOL CstAnalyInProc(VOID)
 	printf("AnlsRet.second...%d\r\n", AnlsRet.second);
 	printf("加速类型=%d，减速类型=%d,晚期减速%d,早期减速%d vd数%d\n",
 		sNST.fastType, sNST.slowType, sNST.LDTime, sNST.EDTime, sNST.VDTime);
-	printf("打评分各个指标2015-05-18\n");
+	printf("打评分各个指标2015-05-25\n");
 	return TRUE;
 }
 

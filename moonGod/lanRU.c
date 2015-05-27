@@ -358,6 +358,7 @@ char ru_ru_string[STR_MAXNUM][150] = {
 	[STR_DLG_ANLS_TOCO]="§º§Ö§Ó§Ö§Ý§Ö§ß§Ú§ñ §á§Ý§à§Õ§Ñ",
 	[STR_DLG_ANLS_ANALYSIS_RESULT]="§°§è§Ö§ß§Ü§Ñ §â§Ö§Ù§å§Ý§î§ä§Ñ§ä§à§Ó:",
 	[STR_DLG_ANLS_DIAGNOSIS]="§¥§Ú§Ñ§Ô§ß§à§Ù:",
+	[STR_DLG_ANLS_DIAGNOSIS] = "Õï¶Ï½á¹û:",
 	[STR_DLG_ANLS_SIGNATURE]="§±§à§Õ§á§Ú§ã§î:",
 	[STR_DLG_ANLS_DATE]="§¥§Ñ§ä§Ñ:",
     [STR_DLG_05MIN] = "5 §Þ§Ú§ß",

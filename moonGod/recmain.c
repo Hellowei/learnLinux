@@ -445,6 +445,7 @@ BOOL RecEventClassInitOps(VOID)
 				break;
 
 			case REC_EVENT_RECALLALL:
+				printf("lPPPPPPPPPPp\n");
 				RecEventClass.func[i] = RecRecallAllStart;
 				break;
 
@@ -1327,7 +1328,7 @@ void PrintLine_112mm(PRECDRVCLASS this)
 		MdlUartTran(this->uartPort, this->Data, toSend, &Send);
 		if (toSend > Send)
 		{
-			printf("PrintLine_112mm::injure packet!!\r\n");
+			//printf("PrintLine_112mm::injure packet!!\r\n");
 		}
 #if 0
 		prinfo("this->uartPort, toSend, Send...%d, %d, %d\r\n", this->uartPort, toSend, Send);

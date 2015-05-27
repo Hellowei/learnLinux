@@ -1833,6 +1833,524 @@ static VOID RecPutRecallAllWave(PRECEVENTCLASS this)
 	pdata = &(this->prntFileAddData->data.data[index]);
 	RecPutRecallGraph(this, pdata, len);
 }
+//打印CST表格
+static INT32 PrintCSTResult(PRECEVENTCLASS this,INT32 *X,INT32 *Y,ARET_SAVE *pResult)
+{
+	INT16 w,h,x,y,x1,y1,w_add,thick;
+	x1 = *X;
+	y1 = *Y;
+	x = x1;
+	y = y1;
+	w = 120;
+	h = 62;
+	thick = 1;
+	UCHAR txt[64];
+	w_add=(MonitorConfig.language == RUSSIAN)?230:0;
+	
+	//从上到下是 项目 胎心基线 振幅摆动 频率摆动 加速 减速 
+	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_ITEMS));
+	RecTextOC(this, x1, y1, w+w_add, h, txt);
+	y1 += h;
+	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_FHR_BASE));
+	RecTextOC(this, x1, y1, w+w_add, h, txt);
+	y1 += h;
+	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_AMPLITUDE_VAR));
+	RecTextOC(this, x1, y1, w+w_add, h, txt);
+	y1 += h;
+	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_PERIOD_VAR));
+	RecTextOC(this, x1, y1, w+w_add, h, txt);
+	y1 += h;
+	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_ACCELRATION));
+	RecTextOC(this, x1, y1, w+w_add, h, txt);
+	y1 += h;
+	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_SLOWDOWN));
+	RecTextOC(this, x1, y1, w+w_add, h, txt);
+	//从上到下是 0分 >100,<180 <5 <2 无 晚期+其它
+	x1 += w+w_add;
+	y1 = y;
+	sprintf(txt, "0");
+	RecTextOC(this, x1, y1, w, h, txt);
+	y1 += h;
+	sprintf(txt, "<100,>180");
+	RecTextOC(this, x1, y1, w, h, txt);
+	y1 += h;
+	sprintf(txt, "<5");
+	RecTextOC(this, x1, y1, w, h, txt);
+	y1 += h;
+	sprintf(txt, "<2");
+	RecTextOC(this, x1, y1, w, h, txt);
+	y1 += h;
+	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_NOTHING));
+	RecTextOC(this, x1, y1, w, h, txt);
+	y1 += h;
+	sprintf(txt, "%s",LoadString(STR_DLG_ANLS_LDOROTHER));
+	RecTextOC(this, x1, y1, w, h, txt);
+	//从上到下是 1分 100~119,161~180 5-9,>25 周期性 变异
+	x1 += w;
+	y1 = y;
+	sprintf(txt, "1");
+	RecTextOC(this, x1, y1, w, h, txt);
+	y1 += h;
+	sprintf(txt, "100~119,161~180");
+	RecTextOC(this, x1, y1, w, h, txt);
+	y1 += h;
+	sprintf(txt, "5-9,>25");
+	RecTextOC(this, x1, y1, w, h, txt);
+	y1 += h;
+	sprintf(txt, "2-6");
+	RecTextOC(this, x1, y1, w, h, txt);
+	y1 += h;
+	sprintf(txt, "%s",LoadString(STR_DLG_ANLS_ACCELRATION_TYPE1));
+	RecTextOC(this, x1, y1, w, h, txt);
+	y1 += h;
+	sprintf(txt, "%s",LoadString(STR_DLG_ANLS_CHANGE));
+	RecTextOC(this, x1, y1, w, h, txt);
+	//从上到下是 2分 120~160 "10-25" ">6" 散在性 无
+	x1 += w;
+	y1 = y;
+	sprintf(txt, "2");
+	RecTextOC(this, x1, y1, w, h, txt);
+	y1 += h;
+	sprintf(txt, "120-160");
+	RecTextOC(this, x1, y1, w, h, txt);
+	y1 += h;
+	sprintf(txt, "10-25");
+	RecTextOC(this, x1, y1, w, h, txt);
+	y1 += h;
+	sprintf(txt, ">6");
+	RecTextOC(this, x1, y1, w, h, txt);
+	y1 += h;
+	sprintf(txt, "%s",LoadString(STR_DLG_ANLS_ACCELRATION_TYPE2));
+	RecTextOC(this, x1, y1, w, h, txt);
+	y1 += h;
+	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_NOTHING));
+	RecTextOC(this, x1, y1, w, h, txt);
+	//从上到下是 本例结果 结果1 结果2 结果3
+	x1 += w;
+	y1 = y;
+	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_RESULT));
+	RecTextOC(this, x1, y1, w, h, txt);
+	y1 += h;
+	if (pResult->fhr_JX)
+		sprintf(txt, "%d", pResult->fhr_JX);
+	else
+		strcpy(txt, "--");
+	RecTextOC(this, x1, y1, w, h, txt);
+	//振幅
+	y1 += h;
+	if (pResult->fhr_ZV)
+		sprintf(txt, "%d", pResult->fhr_ZV);
+	else
+		strcpy(txt, "--");
+	RecTextOC(this, x1, y1, w, h, txt);
+	
+	y1 += h;//周期
+	if (pResult->fhr_QV)
+		sprintf(txt, "%d", pResult->fhr_QV);
+	else
+		strcpy(txt, "--");
+	RecTextOC(this, x1, y1, w, h, txt);
+	y1 += h;//加速
+	if (pResult->tdfast)//
+		if(pResult->fastType == 1)//周期性
+			sprintf(txt, "%d,%s",pResult->tdfast, LoadString(STR_DLG_ANLS_ACCELRATION_TYPE1));
+		else if(pResult->fastType == 2)//散在性
+			sprintf(txt, "%d,%s",pResult->tdfast,LoadString(STR_DLG_ANLS_ACCELRATION_TYPE2));
+		else
+			strcpy(txt, "--");
+	else
+		sprintf(txt, "%s", LoadString(STR_DLG_ANLS_NOTHING));
+	RecTextOC(this, x1, y1, w, h, txt);
+	y1 += h;//减速
+	if (pResult->tdslow)
+		if(pResult->slowType == 1)//晚期减速
+			sprintf(txt, "%s", LoadString(STR_DLG_ANLS_LASTSLOW));
+		else if(pResult->slowType == 2)//早期减速
+			sprintf(txt, "%s", LoadString(STR_DLG_ANLS_EDSLOW));
+		else if(pResult->slowType == 3)//变异
+			sprintf(txt, "%s", LoadString(STR_DLG_ANLS_CHANGE));
+		else
+			strcpy(txt, "--");
+	else
+		sprintf(txt, "%s", LoadString(STR_DLG_ANLS_NOTHING));
+	RecTextOC(this, x1, y1, w, h, txt);
+	//画表格 先横后竖
+	y1 = y;
+	x1 += w;
+	this->pRecClass->RecPreLine(this->pRecClass, x, y1, x1, y1, thick);
+	y1 += h;
+	this->pRecClass->RecPreLine(this->pRecClass, x, y1, x1, y1, thick);
+	y1 += h;
+	this->pRecClass->RecPreLine(this->pRecClass, x, y1, x1, y1, thick);
+	y1 += h;
+	this->pRecClass->RecPreLine(this->pRecClass, x, y1, x1, y1, thick);
+	y1 += h;
+	this->pRecClass->RecPreLine(this->pRecClass, x, y1, x1, y1, thick);
+	y1 += h;
+	this->pRecClass->RecPreLine(this->pRecClass, x, y1, x1, y1, thick);
+	y1 += h;
+	this->pRecClass->RecPreLine(this->pRecClass, x, y1, x1, y1, thick);
+	//竖线
+	x1 = x;	
+	this->pRecClass->RecPreLine(this->pRecClass, x1, y, x1, y1, thick);
+	x1 += (w+w_add);
+	this->pRecClass->RecPreLine(this->pRecClass, x1, y, x1, y1, thick);
+	x1 += w;
+	this->pRecClass->RecPreLine(this->pRecClass, x1, y, x1, y1, thick);
+	x1 += w;
+	this->pRecClass->RecPreLine(this->pRecClass, x1, y, x1, y1, thick);
+	x1 += w;
+	this->pRecClass->RecPreLine(this->pRecClass, x1, y, x1, y1, thick);
+	x1 += w;
+	this->pRecClass->RecPreLine(this->pRecClass, x1, y, x1, y1, thick);
+	*X = x1;
+	*Y = y1;
+}
+
+//打印FisCher表格
+static INT32 PrintFisCherResult(PRECEVENTCLASS this,INT32 *X,INT32 *Y,ARET_SAVE *pResult)
+{
+	//printf("打印FisCher表格\n");
+	INT16 w,h,x,y,x1,y1,w_add,thick;
+	x1 = *X;
+	y1 = *Y;
+	x = x1;
+	y = y1;
+	w = 120;
+	h = 62;
+	thick = 1;
+	UCHAR txt[64];
+	w_add=(MonitorConfig.language == RUSSIAN)?230:0;
+	//从上到下是 项目 胎心率基线 振幅变异 周期变异  加速 减速
+	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_ITEMS));
+	RecTextOC(this, x1, y1, w+w_add, h, txt);
+	y1 += h;
+	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_BASE_LINE));
+	RecTextOC(this, x1, y1, w+w_add, h, txt);
+	y1 += h;
+	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_AMPLITUDE_VAR));
+	RecTextOC(this, x1, y1, w+w_add, h, txt);
+	y1 += h;
+	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_PERIOD_VAR));
+								  
+	RecTextOC(this, x1, y1, w+w_add, h, txt);
+	y1 += h;
+	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_ACCELRATION));
+	RecTextOC(this, x1, y1, w+w_add, h, txt);
+	y1 += h;
+	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_SLOWDOWN));
+	RecTextOC(this, x1, y1, w+w_add, h, txt);
+	//从上到下是 0分  <100,>180   <5   <2   无   LD,>=8
+	x1 += w+w_add;
+	y1 = y;
+	sprintf(txt, "0");
+	RecTextOC(this, x1, y1, w, h, txt);
+	y1 += h;
+	sprintf(txt, "<100,>180");
+	RecTextOC(this, x1, y1, w, h, txt);
+	y1 += h;
+	sprintf(txt, "<5");
+	RecTextOC(this, x1, y1, w, h, txt);
+	y1 += h;
+	sprintf(txt, "<2");
+	RecTextOC(this, x1, y1, w, h, txt);
+	y1 += h;
+	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_ACCELRATION_TYPE0));
+	RecTextOC(this, x1, y1, w, h, txt);
+	y1 += h;
+	sprintf(txt, "%s",LoadString(STR_DLG_ANLS_SLOWDOWN_TYPE0));
+	RecTextOC(this, x1, y1, w, h, txt);
+	//从上到下是 1分  100~119\n161~180   5~9,>30   2~6  1~4 4~7,VD 
+	x1 += w;
+	y1 = y;
+	sprintf(txt, "1");
+	RecTextOC(this, x1, y1, w, h, txt);
+	y1 += h;
+	sprintf(txt, "100~119,161~180");
+	RecTextOC(this, x1, y1, w, h, txt);
+	y1 += h;
+	sprintf(txt, "5~9,>30");
+	RecTextOC(this, x1, y1, w, h, txt);
+	y1 += h;
+	sprintf(txt, "2-6");
+	RecTextOC(this, x1, y1, w, h, txt);
+	y1 += h;
+	sprintf(txt, "1~4");
+	RecTextOC(this, x1, y1, w, h, txt);
+	y1 += h;
+	sprintf(txt, "4~7,VD");
+	RecTextOC(this, x1, y1, w, h, txt);
+	//从上到下是 2分  120~160   10~30   >6  >4 无,其他
+	x1 += w;
+	y1 = y;
+	sprintf(txt, "2");
+	RecTextOC(this, x1, y1, w, h, txt);
+	y1 += h;
+	sprintf(txt, "120-160");
+	RecTextOC(this, x1, y1, w, h, txt);
+	y1 += h;
+	sprintf(txt, "10-30");
+	RecTextOC(this, x1, y1, w, h, txt);
+	y1 += h;
+	sprintf(txt, ">6");
+	RecTextOC(this, x1, y1, w, h, txt);
+	y1 += h;
+	sprintf(txt, ">4");
+	RecTextOC(this, x1, y1, w, h, txt);
+	y1 += h;
+	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_SLOWDOWN_TYPE2));
+	RecTextOC(this, x1, y1, w, h, txt);
+	//从上到下是 本例结果 结果1 结果2 结果3
+	x1 += w;
+	y1 = y;
+	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_RESULT));
+	RecTextOC(this, x1, y1, w, h, txt);
+	y1 += h;
+	if (pResult->fhr_JX)
+		sprintf(txt, "%d", pResult->fhr_JX);
+	else
+		strcpy(txt, "--");
+	RecTextOC(this, x1, y1, w, h, txt);
+	//振幅
+	y1 += h;
+	if (pResult->fhr_ZV)
+		sprintf(txt, "%d", pResult->fhr_ZV);
+	else
+		strcpy(txt, "--");
+	RecTextOC(this, x1, y1, w, h, txt);
+	
+	y1 += h;//周期
+	if (pResult->fhr_QV)
+		sprintf(txt, "%d", pResult->fhr_QV);
+	else
+		strcpy(txt, "--");
+	RecTextOC(this, x1, y1, w, h, txt);
+	y1 += h;//加速
+	sprintf(txt, "%d", pResult->tdfast);
+	RecTextOC(this, x1, y1, w, h, txt);
+	y1 += h;//减速
+	if (pResult->tdslow)
+		if(pResult->slowType == 1)//晚期减速
+			sprintf(txt, "%d,LD",pResult->tdslow);//, LoadString(STR_DLG_ANLS_LASTSLOW));
+		else if(pResult->slowType == 2)//早期减速
+			sprintf(txt, "%d,ED",pResult->tdslow);//, LoadString(STR_DLG_ANLS_EDSLOW));
+		else if(pResult->slowType == 3)//变异
+			sprintf(txt, "%d,VD",pResult->tdslow);//, LoadString(STR_DLG_ANLS_CHANGE));
+		else
+			sprintf(txt, "%d",pResult->tdslow);
+	else
+		sprintf(txt, "%s", LoadString(STR_DLG_ANLS_NOTHING));
+	RecTextOC(this, x1, y1, w, h, txt);
+	//画表格 先横后竖
+	y1 = y;
+	x1 += w;
+	this->pRecClass->RecPreLine(this->pRecClass, x, y1, x1, y1, thick);
+	y1 += h;
+	this->pRecClass->RecPreLine(this->pRecClass, x, y1, x1, y1, thick);
+	y1 += h;
+	this->pRecClass->RecPreLine(this->pRecClass, x, y1, x1, y1, thick);
+	y1 += h;
+	this->pRecClass->RecPreLine(this->pRecClass, x, y1, x1, y1, thick);
+	y1 += h;
+	this->pRecClass->RecPreLine(this->pRecClass, x, y1, x1, y1, thick);
+	y1 += h;
+	this->pRecClass->RecPreLine(this->pRecClass, x, y1, x1, y1, thick);
+	y1 += h;
+	this->pRecClass->RecPreLine(this->pRecClass, x, y1, x1, y1, thick);
+	//竖线
+	x1 = x;	
+	this->pRecClass->RecPreLine(this->pRecClass, x1, y, x1, y1, thick);
+	x1 += (w+w_add);
+	this->pRecClass->RecPreLine(this->pRecClass, x1, y, x1, y1, thick);
+	x1 += w;
+	this->pRecClass->RecPreLine(this->pRecClass, x1, y, x1, y1, thick);
+	x1 += w;
+	this->pRecClass->RecPreLine(this->pRecClass, x1, y, x1, y1, thick);
+	x1 += w;
+	this->pRecClass->RecPreLine(this->pRecClass, x1, y, x1, y1, thick);
+	x1 += w;
+	this->pRecClass->RecPreLine(this->pRecClass, x1, y, x1, y1, thick);
+	*X = x1;
+	*Y = y1;
+}
+//打印Krebs表格
+static INT32 PrintKrebsResult(PRECEVENTCLASS this,INT32 *X,INT32 *Y,ARET_SAVE *pResult)
+{
+	//printf("打印Krebs表格\n");
+	INT16 w,h,x,y,x1,y1,w_add,thick;
+	x1 = *X;
+	y1 = *Y;
+	x = x1;
+	y = y1;
+	w = 120;
+	h = 62;
+	thick = 1;
+	UCHAR txt[64];
+	w_add=(MonitorConfig.language == RUSSIAN)?230:0;
+	//从上到下是 项目 心率基线 振幅变异 周期变异 加速 减速 胎动 
+	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_ITEMS));
+	RecTextOC(this, x1, y1, w+w_add, h, txt);
+	y1 += h;
+	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_FHR_BASE));
+	RecTextOC(this, x1, y1, w+w_add, h, txt);
+	y1 += h;
+	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_AMPLITUDE_VAR));
+	RecTextOC(this, x1, y1, w+w_add, h, txt);
+	y1 += h;
+	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_PERIOD_VAR));
+								  
+	RecTextOC(this, x1, y1, w+w_add, h, txt);
+	y1 += h;
+	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_ACCELRATION));
+	RecTextOC(this, x1, y1, w+w_add, h, txt);
+	y1 += h;
+	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_SLOWDOWN));
+	RecTextOC(this, x1, y1, w+w_add, h, txt);
+	y1 += h;
+	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_FETALMOVIE));
+	RecTextOC(this, x1, y1, w+w_add, h, txt);
+	//从上到下是 0分  <100,>180   <5   <3  无 >=2  0  
+	x1 += w+w_add;
+	y1 = y;
+	sprintf(txt, "0");
+	RecTextOC(this, x1, y1, w, h, txt);
+	y1 += h;
+	sprintf(txt, "<100,>180");
+	RecTextOC(this, x1, y1, w, h, txt);
+	y1 += h;
+	sprintf(txt, "<5");
+	RecTextOC(this, x1, y1, w, h, txt);
+	y1 += h;
+	sprintf(txt, "<3");
+	RecTextOC(this, x1, y1, w, h, txt);
+	y1 += h;
+	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_NOTHING));
+	RecTextOC(this, x1, y1, w, h, txt);
+	y1 += h;
+	sprintf(txt, ">=2");
+	RecTextOC(this, x1, y1, w, h, txt);
+	y1 += h;
+	sprintf(txt, "0");
+	RecTextOC(this, x1, y1, w, h, txt);
+	//从上到下是 1分  100~119,161~180 5~9,>25 3~6 1~4 1 1~4
+	x1 += w;
+	y1 = y;
+	sprintf(txt, "1");
+	RecTextOC(this, x1, y1, w, h, txt);
+	y1 += h;
+	sprintf(txt, "100~119,161~180");
+	RecTextOC(this, x1, y1, w, h, txt);
+	y1 += h;
+	sprintf(txt, "5~9,>25");
+	RecTextOC(this, x1, y1, w, h, txt);
+	y1 += h;
+	sprintf(txt, "3-6");
+	RecTextOC(this, x1, y1, w, h, txt);
+	y1 += h;
+	sprintf(txt, "1~4");
+	RecTextOC(this, x1, y1, w, h, txt);
+	y1 += h;
+	sprintf(txt, "1");
+	RecTextOC(this, x1, y1, w, h, txt);
+	y1 += h;
+	sprintf(txt, "1~4");
+	RecTextOC(this, x1, y1, w, h, txt);
+	//从上到下是 2分  
+	x1 += w;
+	y1 = y;
+	sprintf(txt, "2");
+	RecTextOC(this, x1, y1, w, h, txt);
+	y1 += h;
+	sprintf(txt, "120-160");
+	RecTextOC(this, x1, y1, w, h, txt);
+	y1 += h;
+	sprintf(txt, "10-25");
+	RecTextOC(this, x1, y1, w, h, txt);
+	y1 += h;
+	sprintf(txt, ">6");
+	RecTextOC(this, x1, y1, w, h, txt);
+	y1 += h;
+	sprintf(txt, ">4");
+	RecTextOC(this, x1, y1, w, h, txt);
+	y1 += h;
+	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_NOTHINGORED));
+	RecTextOC(this, x1, y1, w, h, txt);
+	y1 += h;
+	sprintf(txt, ">4");
+	RecTextOC(this, x1, y1, w, h, txt);
+	//从上到下是 本例结果  结果1 结果2 结果3 结果4 结果5
+	x1 += w;
+	y1 = y;
+	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_RESULT));
+	RecTextOC(this, x1, y1, w, h, txt);
+	y1 += h;
+	if (pResult->fhr_JX)//基线
+		sprintf(txt, "%d", pResult->fhr_JX);
+	else
+		strcpy(txt, "--");
+	RecTextOC(this, x1, y1, w, h, txt);
+	//振幅
+	y1 += h;
+	if (pResult->fhr_ZV)
+		sprintf(txt, "%d", pResult->fhr_ZV);
+	else
+		strcpy(txt, "--");
+	RecTextOC(this, x1, y1, w, h, txt);
+	
+	y1 += h;//周期
+	if (pResult->fhr_QV)
+		sprintf(txt, "%d", pResult->fhr_QV);
+	else
+		strcpy(txt, "--");
+	RecTextOC(this, x1, y1, w, h, txt);
+	y1 += h;//加速
+	sprintf(txt, "%d", pResult->tdfast);
+	RecTextOC(this, x1, y1, w, h, txt);
+	y1 += h;//减速
+	//----------
+	if ((pResult->tdslow) && (pResult->slowType == 2))//早期减速
+		sprintf(txt, "%d,ED", pResult->tdslow);
+	else
+		sprintf(txt, "%d", pResult->tdslow);
+	//----------
+	RecTextOC(this, x1, y1, w, h, txt);
+	y1 += h;	//胎动
+	sprintf(txt, "%d", pResult->fm_nr);
+	RecTextOC(this, x1, y1, w, h, txt);
+	//画表格 先横后竖
+	y1 = y;
+	x1 += w;
+	this->pRecClass->RecPreLine(this->pRecClass, x, y1, x1, y1, thick);
+	y1 += h;
+	this->pRecClass->RecPreLine(this->pRecClass, x, y1, x1, y1, thick);
+	y1 += h;
+	this->pRecClass->RecPreLine(this->pRecClass, x, y1, x1, y1, thick);
+	y1 += h;
+	this->pRecClass->RecPreLine(this->pRecClass, x, y1, x1, y1, thick);
+	y1 += h;
+	this->pRecClass->RecPreLine(this->pRecClass, x, y1, x1, y1, thick);
+	y1 += h;
+	this->pRecClass->RecPreLine(this->pRecClass, x, y1, x1, y1, thick);
+	y1 += h;
+	this->pRecClass->RecPreLine(this->pRecClass, x, y1, x1, y1, thick);
+	y1 += h;
+	this->pRecClass->RecPreLine(this->pRecClass, x, y1, x1, y1, thick);
+	//竖线
+	x1 = x;	
+	this->pRecClass->RecPreLine(this->pRecClass, x1, y, x1, y1, thick);
+	x1 += (w+w_add);
+	this->pRecClass->RecPreLine(this->pRecClass, x1, y, x1, y1, thick);
+	x1 += w;
+	this->pRecClass->RecPreLine(this->pRecClass, x1, y, x1, y1, thick);
+	x1 += w;
+	this->pRecClass->RecPreLine(this->pRecClass, x1, y, x1, y1, thick);
+	x1 += w;
+	this->pRecClass->RecPreLine(this->pRecClass, x1, y, x1, y1, thick);
+	x1 += w;
+	this->pRecClass->RecPreLine(this->pRecClass, x1, y, x1, y1, thick);
+	*X = x1;
+	*Y = y1;
+}
 
 /*******************************************************************************
 * Function	: RecPutRecallAnaly
@@ -1843,6 +2361,7 @@ static VOID RecPutRecallAllWave(PRECEVENTCLASS this)
 *******************************************************************************/
 static INT32 RecPutRecallAnaly (PRECEVENTCLASS this, INT32 start)
 {
+	
 //	this->pRecClass->RecPreShowCharacter(this->pRecClass, )
 	PTRPARIENT pFile = this->prntFileAddData;
 	if (pFile == NULL)
@@ -1921,151 +2440,168 @@ static INT32 RecPutRecallAnaly (PRECEVENTCLASS this, INT32 start)
 	w = 120;
 	x1 = x;
 	y1 = y;
-
-	
-	this->pRecClass->RecPreLine(this->pRecClass, x, y1, x, y1, thick);
-	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_ITEMS));
-	RecTextOC(this, x1, y1, w+w_add, h, txt);
-	y1 += h;
-	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_FHR_BASE));
-	RecTextOC(this, x1, y1, w+w_add, h, txt);
-	y1 += h;
-	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_AMPLITUDE));
-	RecTextOC(this, x1, y1, w+w_add, h, txt);
-	y1 += h;
-	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_FAST_TIME));
-	RecTextOC(this, x1, y1, w+w_add, h, txt);
-	y1 += h;
-	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_FAST_AMPL));
-	RecTextOC(this, x1, y1, w+w_add, h, txt);
-	y1 += h;
-	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_FM_TIMES));
-	RecTextOC(this, x1, y1, w+w_add, h, txt);
-	x1 += w+w_add;
-	y1 += h;
-	this->pRecClass->RecPreLine(this->pRecClass, x, y, x, y1, thick);
-	this->pRecClass->RecPreLine(this->pRecClass, x1, y, x1, y1, thick);
-	y1 = y;
-	sprintf(txt, "0");
-	RecTextOC(this, x1, y1, w, h, txt);
-	y1 += h;
-	sprintf(txt, "<100");
-	RecTextOC(this, x1, y1, w, h, txt);
-	y1 += h;
-	sprintf(txt, "<5");
-	RecTextOC(this, x1, y1, w, h, txt);
-	y1 += h;
-	sprintf(txt, "<10");
-	RecTextOC(this, x1, y1, w, h, txt);
-	y1 += h;
-	sprintf(txt, "<10");
-	RecTextOC(this, x1, y1, w, h, txt);
-	y1 += h;
-	sprintf(txt, "0");
-	RecTextOC(this, x1, y1, w, h, txt);
-	x1 += w;
-	y1 += h;
-	this->pRecClass->RecPreLine(this->pRecClass, x1, y, x1, y1, thick);
-	y1 = y;
-	sprintf(txt, "1");
-	RecTextOC(this, x1, y1, w, h, txt);
-	y1 += h;
-	sprintf(txt, "100-119,  >160");
-	RecTextOC(this, x1, y1, w, h, txt);
-	y1 += h;
-	sprintf(txt, "5-9,>30");
-	RecTextOC(this, x1, y1, w, h, txt);
-	y1 += h;
-	sprintf(txt, "10-14");
-	RecTextOC(this, x1, y1, w, h, txt);
-	y1 += h;
-	sprintf(txt, "10-14");
-	RecTextOC(this, x1, y1, w, h, txt);
-	y1 += h;
-	sprintf(txt, "1-2");
-	RecTextOC(this, x1, y1, w, h, txt);
-	x1 += w;
-	y1 += h;
-	this->pRecClass->RecPreLine(this->pRecClass, x1, y, x1, y1, thick);
-	y1 = y;
-	sprintf(txt, "2");
-	RecTextOC(this, x1, y1, w, h, txt);
-	y1 += h;
-	sprintf(txt, "120-160");
-	RecTextOC(this, x1, y1, w, h, txt);
-	y1 += h;
-	sprintf(txt, "10-30");
-	RecTextOC(this, x1, y1, w, h, txt);
-	y1 += h;
-	sprintf(txt, ">=15");
-	RecTextOC(this, x1, y1, w, h, txt);
-	y1 += h;
-	sprintf(txt, ">=15");
-	RecTextOC(this, x1, y1, w, h, txt);
-	y1 += h;
-	sprintf(txt, ">3");
-	RecTextOC(this, x1, y1, w, h, txt);
-	x1 += w;
-	y1 += h;
-	this->pRecClass->RecPreLine(this->pRecClass, x1, y, x1, y1, thick);
-	y1 = y;
-	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_RESULT));
-	RecTextOC(this, x1, y1, w, h, txt);
-	y1 += h;
 	ARET_SAVE *pResult = (ARET_SAVE*)pFile->ansis.buffer;
-	if (pResult->fhr_JX)
-		sprintf(txt, "%d", pResult->fhr_JX);
-	else
-		strcpy(txt, "--");
-	RecTextOC(this, x1, y1, w, h, txt);
-	y1 += h;
-	if (pResult->fhr_ZV)
-		sprintf(txt, "%d", pResult->fhr_ZV);
-	else
-		strcpy(txt, "--");
-	RecTextOC(this, x1, y1, w, h, txt);
-	y1 += h;
-	if (pResult->fasttime)
-		sprintf(txt, "%d", pResult->fasttime);
-	else
-		strcpy(txt, "--");
-	RecTextOC(this, x1, y1, w, h, txt);
-	y1 += h;
-	if (pResult->fasthigh)
-		sprintf(txt, "%d", pResult->fasthigh);
-	else
-		strcpy(txt, "--");
-	RecTextOC(this, x1, y1, w, h, txt);
-	y1 += h;
-	if (pResult->fm_nr)
-		sprintf(txt, "%d", pResult->fm_nr);
-	else
-		strcpy(txt, "--");
-	RecTextOC(this, x1, y1, w, h, txt);
-	x1 += w;
-	y1 += h;
-	this->pRecClass->RecPreLine(this->pRecClass, x1, y, x1, y1, thick);
-	
-	y1 = y;
-	this->pRecClass->RecPreLine(this->pRecClass, x, y1, x1, y1, thick);
-	y1 += h;
-	this->pRecClass->RecPreLine(this->pRecClass, x, y1, x1, y1, thick);
-	y1 += h;
-	this->pRecClass->RecPreLine(this->pRecClass, x, y1, x1, y1, thick);
-	y1 += h;
-	this->pRecClass->RecPreLine(this->pRecClass, x, y1, x1, y1, thick);
-	y1 += h;
-	this->pRecClass->RecPreLine(this->pRecClass, x, y1, x1, y1, thick);
-	y1 += h;
-	this->pRecClass->RecPreLine(this->pRecClass, x, y1, x1, y1, thick);
-	y1 += h;
-	this->pRecClass->RecPreLine(this->pRecClass, x, y1, x1, y1, thick);
-
+	//打印NST方法
+	if (FhrConfig.defaultAnalyType == 1)//NST评分法
+	{	//printf("打印NST方法\n");
+		this->pRecClass->RecPreLine(this->pRecClass, x, y1, x, y1, thick);
+		sprintf(txt, "%s", LoadString(STR_DLG_ANLS_ITEMS));
+		RecTextOC(this, x1, y1, w+w_add, h, txt);
+		y1 += h;
+		sprintf(txt, "%s", LoadString(STR_DLG_ANLS_FHR_BASE));
+		RecTextOC(this, x1, y1, w+w_add, h, txt);
+		y1 += h;
+		sprintf(txt, "%s", LoadString(STR_DLG_ANLS_AMPLITUDE));
+		RecTextOC(this, x1, y1, w+w_add, h, txt);
+		y1 += h;
+		sprintf(txt, "%s", LoadString(STR_DLG_ANLS_FAST_TIME));
+		RecTextOC(this, x1, y1, w+w_add, h, txt);
+		y1 += h;
+		sprintf(txt, "%s", LoadString(STR_DLG_ANLS_FAST_AMPL));
+		RecTextOC(this, x1, y1, w+w_add, h, txt);
+		y1 += h;
+		sprintf(txt, "%s", LoadString(STR_DLG_ANLS_FM_TIMES));
+		RecTextOC(this, x1, y1, w+w_add, h, txt);
+		x1 += w+w_add;
+		y1 += h;
+		this->pRecClass->RecPreLine(this->pRecClass, x, y, x, y1, thick);
+		this->pRecClass->RecPreLine(this->pRecClass, x1, y, x1, y1, thick);
+		y1 = y;
+		sprintf(txt, "0");
+		RecTextOC(this, x1, y1, w, h, txt);
+		y1 += h;
+		sprintf(txt, "<100");
+		RecTextOC(this, x1, y1, w, h, txt);
+		y1 += h;
+		sprintf(txt, "<5");
+		RecTextOC(this, x1, y1, w, h, txt);
+		y1 += h;
+		sprintf(txt, "<10");
+		RecTextOC(this, x1, y1, w, h, txt);
+		y1 += h;
+		sprintf(txt, "<10");
+		RecTextOC(this, x1, y1, w, h, txt);
+		y1 += h;
+		sprintf(txt, "0");
+		RecTextOC(this, x1, y1, w, h, txt);
+		x1 += w;
+		y1 += h;
+		this->pRecClass->RecPreLine(this->pRecClass, x1, y, x1, y1, thick);
+		y1 = y;
+		sprintf(txt, "1");
+		RecTextOC(this, x1, y1, w, h, txt);
+		y1 += h;
+		sprintf(txt, "100-119,  >160");
+		RecTextOC(this, x1, y1, w, h, txt);
+		y1 += h;
+		sprintf(txt, "5-9,>30");
+		RecTextOC(this, x1, y1, w, h, txt);
+		y1 += h;
+		sprintf(txt, "10-14");
+		RecTextOC(this, x1, y1, w, h, txt);
+		y1 += h;
+		sprintf(txt, "10-14");
+		RecTextOC(this, x1, y1, w, h, txt);
+		y1 += h;
+		sprintf(txt, "1-2");
+		RecTextOC(this, x1, y1, w, h, txt);
+		x1 += w;
+		y1 += h;
+		this->pRecClass->RecPreLine(this->pRecClass, x1, y, x1, y1, thick);
+		y1 = y;
+		sprintf(txt, "2");
+		RecTextOC(this, x1, y1, w, h, txt);
+		y1 += h;
+		sprintf(txt, "120-160");
+		RecTextOC(this, x1, y1, w, h, txt);
+		y1 += h;
+		sprintf(txt, "10-30");
+		RecTextOC(this, x1, y1, w, h, txt);
+		y1 += h;
+		sprintf(txt, ">=15");
+		RecTextOC(this, x1, y1, w, h, txt);
+		y1 += h;
+		sprintf(txt, ">=15");
+		RecTextOC(this, x1, y1, w, h, txt);
+		y1 += h;
+		sprintf(txt, ">3");
+		RecTextOC(this, x1, y1, w, h, txt);
+		x1 += w;
+		y1 += h;
+		this->pRecClass->RecPreLine(this->pRecClass, x1, y, x1, y1, thick);
+		y1 = y;
+		sprintf(txt, "%s", LoadString(STR_DLG_ANLS_RESULT));
+		RecTextOC(this, x1, y1, w, h, txt);
+		y1 += h;
+		if (pResult->fhr_JX)
+			sprintf(txt, "%d", pResult->fhr_JX);
+		else
+			strcpy(txt, "--");
+		RecTextOC(this, x1, y1, w, h, txt);
+		y1 += h;
+		if (pResult->fhr_ZV)
+			sprintf(txt, "%d", pResult->fhr_ZV);
+		else
+			strcpy(txt, "--");
+		RecTextOC(this, x1, y1, w, h, txt);
+		y1 += h;
+		if (pResult->fasttime)
+			sprintf(txt, "%d", pResult->fasttime);
+		else
+			strcpy(txt, "--");
+		RecTextOC(this, x1, y1, w, h, txt);
+		y1 += h;
+		if (pResult->fasthigh)
+			sprintf(txt, "%d", pResult->fasthigh);
+		else
+			strcpy(txt, "--");
+		RecTextOC(this, x1, y1, w, h, txt);
+		y1 += h;
+		if (pResult->fm_nr)
+			sprintf(txt, "%d", pResult->fm_nr);
+		else
+			strcpy(txt, "--");
+	//	printf("pResult->fm_nr=%d ,pResult->fm_nr= %u\n",pResult->fm_nr,pResult->fm_nr);
+		RecTextOC(this, x1, y1, w, h, txt);
+		x1 += w;
+		y1 += h;
+		this->pRecClass->RecPreLine(this->pRecClass, x1, y, x1, y1, thick);
+		
+		y1 = y;
+		this->pRecClass->RecPreLine(this->pRecClass, x, y1, x1, y1, thick);
+		y1 += h;
+		this->pRecClass->RecPreLine(this->pRecClass, x, y1, x1, y1, thick);
+		y1 += h;
+		this->pRecClass->RecPreLine(this->pRecClass, x, y1, x1, y1, thick);
+		y1 += h;
+		this->pRecClass->RecPreLine(this->pRecClass, x, y1, x1, y1, thick);
+		y1 += h;
+		this->pRecClass->RecPreLine(this->pRecClass, x, y1, x1, y1, thick);
+		y1 += h;
+		this->pRecClass->RecPreLine(this->pRecClass, x, y1, x1, y1, thick);
+		y1 += h;
+		this->pRecClass->RecPreLine(this->pRecClass, x, y1, x1, y1, thick);
+		sprintf(txt, "%s", LoadString(STR_DLG_ANLS_NAME));
+	}
+	else if (FhrConfig.defaultAnalyType == 2)
+	{
+		PrintFisCherResult(this,&x1,&y1,pResult);
+		sprintf(txt, "%s", LoadString(STR_DLG_ANLS_FISCHER));
+	}
+	else if (FhrConfig.defaultAnalyType == 3)
+	{
+		PrintKrebsResult(this,&x1,&y1,pResult);
+		sprintf(txt, "%s", LoadString(STR_DLG_ANLS_KREBS));
+	}
+	else if (FhrConfig.defaultAnalyType == 4)
+	{
+		PrintCSTResult(this,&x1,&y1,pResult);
+		sprintf(txt, "%s", LoadString(STR_DLG_ANLS_CST));
+	}
+	/////////表格的内容到此为止，以下部分又是固定的了
 	y2 = y1;
-
 	y1 = y + 20;
 	x1 += 40;
-	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_NAME));
 	RecTextOut(this, x1, y1, txt);
 	y1 += h;
 	sprintf(txt, "%s %4d:%02d", LoadString(STR_DLG_ANLS_TIME),
@@ -2093,7 +2629,12 @@ static INT32 RecPutRecallAnaly (PRECEVENTCLASS this, INT32 start)
 	RecTextOut(this, x1, y1, txt);
 	
 	x1 = x;
-	y = y2 + 40;
+	y = y2 + 20;
+	sprintf(txt, "%s",LoadString(STR_DLG_ANLS_DIAGNOSIS));
+	RecTextOut(this, x1, y, txt);
+	
+	x1 = x;
+	y = y2 + 60;
 	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_DIAGNOSIS));
 	RecTextOut(this, x1, y, txt);
 	x1 = ((x2 >> 2) << 1);
