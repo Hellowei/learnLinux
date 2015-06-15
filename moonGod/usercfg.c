@@ -933,7 +933,7 @@ STATUS PutConfigKeyValue2(CFG_KEYID keyID, UINT8 *value)
 			break;
 		case CFG_KEYID_DEFAULTANALYTYPE://用户保存的评分设置默认值:
 			ret = GetIntegerKeyValue(value);
-			printf("读出默认值defaultAnalyType=%d \n",ret);
+		//	printf("读出默认值defaultAnalyType=%d \n",ret);
 			FhrConfig.defaultAnalyType = ret?ret:1;//没有默认值设为NST评分法
 			break;
 
@@ -1191,7 +1191,7 @@ VOID Save_Config2 (INT16 cfg_kid)
 		case CFG_KEYID_DEFAULTANALYTYPE://用户默认的评分方法在这里保存
 			sprintf(value, "%d",FhrConfig.defaultAnalyType);
 			
-			printf("这里存%s FhrConfig.defaultAnalyType=%d\n",value,FhrConfig.defaultAnalyType);
+			//printf("这里存%s FhrConfig.defaultAnalyType=%d\n",value,FhrConfig.defaultAnalyType);
 			PushStrKeyValue(cszConfKey[CFG_KEYID_DEFAULTANALYTYPE], value);
 			if (flag) break;
 		case CFG_KEYID_MONITORTYPE:

@@ -18,7 +18,7 @@
 #if !defined(_VERSION_H)
 #define	  _VERSION_H
 
-#define	VERSION			"2.0.21"
-#define	VERSION_SVN		"svn.7204"
+#define	VERSION			"2.0.22"
+#define	VERSION_SVN		"svn.7253"
 
 #endif

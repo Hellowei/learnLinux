@@ -7,7 +7,7 @@ static PACKETFRAME sFetalSendPack;
 
 static FILE *SaveUsbfp = NULL;
 
-VOID FetalSetMoudle(BOOL zero);
+VOID FetalSetMoudle(BOOL zero,BOOL isNeedTocoAmend);
 
 extern INT32 GetUsbBlockStat(CHAR unit);
 
@@ -59,7 +59,7 @@ BOOL InitFhrModule (VOID)
         return FALSE;
     }
     UartSetup(UART_PORT_FETAL, &config);
-    FetalSetMoudle(TRUE);
+    FetalSetMoudle(TRUE,FALSE);
 	OpenSaveUsbFile();
     return TRUE;
 }
@@ -224,6 +224,10 @@ static VOID DealWithGetFmFlag(UINT8 flag)
         autoCnt --;
 
     afm = CalcAutoFmFalgProc();//(flag & 0x20) > 0;
+    static INT afmTimes = 0;//胎动次数
+    static INT effectAfmTimes = 0;//有效胎动次数
+    if(afm)
+    	afmTimes++;
     if (0 == autoCnt)
     {
         if (afm)
@@ -231,6 +235,7 @@ static VOID DealWithGetFmFlag(UINT8 flag)
             autoCnt = FM_INTERVAL_LIMIT;
             if (manualCnt == 0)
             {
+            	effectAfmTimes++;
                 FhrParams.fm++;
                 if (FhrParams.fm > 99)
                 {
@@ -245,6 +250,7 @@ static VOID DealWithGetFmFlag(UINT8 flag)
         if ((afm) && (FM_INTERVAL_LIMIT - 3 < autoCnt))
             autoCnt = FM_INTERVAL_LIMIT;
     }
+    printf("检测到胎动次数%d 实际有效次数%d\n",afmTimes,effectAfmTimes);
 }
 
 static VOID FhrControlCommand (UINT32 param)
@@ -259,8 +265,9 @@ static INT8 GetTocoZeroValue(INT8 zero)
     return (zero * 5);
 }
 
-VOID FetalSetMoudle(BOOL zero)
+VOID FetalSetMoudle(BOOL zero,BOOL isNeedTocoAmend)
 {
+	
     sFetalSendPack.frame.len = 3;
     sFetalSendPack.frame.data[1] = 0x80;
     sFetalSendPack.frame.data[1] |= ((FhrConfig.source << 4) & 0x10);
@@ -274,6 +281,8 @@ VOID FetalSetMoudle(BOOL zero)
 	{
         sFetalSendPack.frame.data[2] &= ~0x40;
 	}
+	sFetalSendPack.frame.data[3] = isNeedTocoAmend;
+	sFetalSendPack.frame.data[4] = 0x05;//赋值的时候会冲掉 只好缓存在这里
     sFetalSendPack.frame.data[2] |= (GetTocoZeroValue(FhrConfig.zero) & 0x1F);
     BuildPacket(MDL_PID_IDM_FETAL,MDL_PID_IDP_FETALCMD, sFetalSendPack.buffer);
     FhrControlCommand((UINT32)&sFetalSendPack);
@@ -307,8 +316,10 @@ VOID FetalSendPack(PACKETFRAME *pack)
 		prinfo("packet len	  :0x%02X\r\n", pack->frame.len);
         for (i = 0; i < pack->frame.len; i++)
             prinfo("packet data[%d] :0x%02X\r\n", i, pack->frame.data[i]);
-//        prinfo("packet chksum   :0x%02X\r\n", pack->frame.data[i++]);
- //       prinfo("packet end      :0x%02X\r\n", pack->frame.data[i]);
+        prinfo("packet chksum   :0x%02X\r\n", pack->frame.data[i++]);
+        prinfo("packet end      :0x%02X\r\n", pack->frame.data[i++]);
+         prinfo("packet amend   :0x%02X\r\n", pack->frame.data[i++]);
+        prinfo("packet tocoend      :0x%02X\r\n", pack->frame.data[i++]);
     }
     #endif
 }
@@ -356,34 +367,38 @@ VOID FetalPacketFound(PACKETFRAME *pack)
         status2  = pack->frame.data[5];
         
         FhrParams.signal = status1;
-        
-        int second=time((time_t *)NULL);
         DealWithGetFmFlag(status1);
         FetalAnalysisPutValue(&FhrParams);
+        //PutFhrValue会导致FetalWaveBuffWritePtr指针下移丢失医生标记事件 这里及时缓存
+		UCHAR dotorEvent = FetalWaveBuffWritePtr->event;
+		dotorEvent = (dotorEvent > 15 || dotorEvent < 0)?0:dotorEvent;
         PutFhrValue(&FhrParams);// 设计收包频率是4Hz,模块实际发包频率是2Hz
         if (status2 & 0x40)
         {
             FhrParams.mark |= 0x02;
             
         }
-     
 		PutFhrValue(&FhrParams);// 增加一次数据保存
 		if (MonitorInfo.inDemo == FALSE)
 	        PutFhrStatusByte(status1, status2);
-
 	#if _ENB_NET_THREAD
 		#if _ENB_NET_SEND_ALARM_INFO
-		sFetalInfo.fhr1 = FhrParams.fhr1;
-		sFetalInfo.fhr2 = FhrParams.fhr2;
-		sFetalInfo.toco = FhrParams.toco;
-		sFetalInfo.afm = FhrParams.afm;
-		sFetalInfo.fm = FhrParams.fm;
+		//数据合法性的校验
+		sFetalInfo.fhr1 = (FhrParams.fhr1<30)?0:FhrParams.fhr1;
+		sFetalInfo.fhr2 = (FhrParams.fhr2<30)?0:FhrParams.fhr2;
+		sFetalInfo.toco = (FhrParams.toco<0)?0:FhrParams.toco;//宫压线
+
+		sFetalInfo.afm = (FhrParams.afm<0)?0:FhrParams.afm;//e胎动曲线
+		sFetalInfo.fm = (FhrParams.fm<0)?0:FhrParams.fm;//胎动次数
+		printf("time=%d 胎动次数%d 曲线=%d\n",get_curr_time(),FhrParams.fm,FhrParams.afm);
 		sFetalInfo.fm_mode = FhrConfig.mode;
-		sFetalInfo.fm_count_mode = FhrConfig.movement_calc;
-		sFetalInfo.fhr_high = sFetalInfo.fhr_high;
-		sFetalInfo.fhr_low = sFetalInfo.fhr_low;
+		sFetalInfo.fm_count_mode = FhrConfig.type;//系统设置保存的胎动计数模式在FhrConfig.type而不是FhrConfig.movement_calc;
+		sFetalInfo.fhr_high = FhrConfig.FhrAlarmLimitHi;// FhrAlarmLimitHi;
+		sFetalInfo.fhr_low = FhrConfig.FhrAlarmLimitLo;
 		sFetalInfo.signal = FhrParams.signal;
-		sFetalInfo.event = FhrParams.mark;
+		UCHAR zerobits = (FhrParams.mark == 0x02)?16:0;//宫压归零
+		sFetalInfo.event = dotorEvent?dotorEvent:zerobits;//1-15代表医生事件 16代表宫压归零
+//		printf("sFetalInfo.fm =%d\n",sFetalInfo.fm);
 		GetNetErrorCode();
 		PostMessage(SysUdpT_HTSK, MSG_NET_UDP_SEND, sizeof(sFetalInfo),(LPARAM)&sFetalInfo);
 		PostMessage(SysTcpT_HTSK, MSG_NET_TCP_SEND, sizeof(sFetalInfo),(LPARAM)&sFetalInfo);

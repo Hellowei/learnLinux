@@ -20,7 +20,7 @@ typedef enum _fhr_rtn_data_index
 #endif
 
 FHRCOMM_EXT BOOL InitFhrModule(VOID);
-FHRCOMM_EXT VOID FetalSetMoudle(BOOL zero);
+FHRCOMM_EXT VOID FetalSetMoudle(BOOL zero,BOOL isNeedTocoAmend);
 FHRCOMM_EXT VOID FetalSendPack(PACKETFRAME *pack);
 FHRCOMM_EXT VOID FetalPacketFound(PACKETFRAME *pack);
 

@@ -197,6 +197,7 @@ int DlgButtonCheckedNum(HWND hWnd, RESID start, int num)
 
 INT16 ShowPatientInfoList(HWND hWnd, INT16 index, INT16 count)
 {
+	printf("回顾走这里ShowPatientInfoList111\n");
 	INT16 i;
 	CHAR *txt;
 	HWND hCtrl;
@@ -222,6 +223,7 @@ INT16 ShowPatientInfoList(HWND hWnd, INT16 index, INT16 count)
 		SetWindowText(hCtrl, STR_DLG_PNT_RECALL_PID0 + i);
 		//EnableWindow(hCtrl, sPtnList[index + i].status == 'S');
 	}
+	printf("回顾走这里ShowPatientInfoList222\n");
 	if (hCtrl = GetDlgItem(hWnd, IDC_PATIENT_RECALL_ALL_C))
 		EnableWindow(hCtrl, sPtnList[index].status == 'S');
 	return i;
@@ -246,7 +248,8 @@ BOOL PtnRecallDlg_OnCommand (HWND hWnd, DWORD wParam, LPARAM lParam)
 		}
 	}
 	switch(LOWORD(wParam))
-	{
+	{	
+		printf("patient switch %d\n",LOWORD(wParam));
 		case IDC_PATIENT_RECALL_ALL_C:
 			status = IsDlgButtonChecked(hWnd, LOWORD(wParam));
 			CheckDlgButton(hWnd, LOWORD(wParam), !status);
@@ -313,12 +316,17 @@ BOOL PtnRecallDlg_OnCommand (HWND hWnd, DWORD wParam, LPARAM lParam)
 					if (status = IsDlgButtonChecked(hWnd, i + IDC_PATIENT_RECALL_ID1_C))
 						break;
 				}
+				printf("IDC_PATIENT_RECALL_OPEN_B11 %d %d\n",i,num);
 				if (i < num)
-				{
+				{	printf("IDC_PATIENT_RECALL_111\n");
 					CheckDlgButton(hWnd, i + IDC_PATIENT_RECALL_ID1_C, FALSE);
+					printf("IDC_PATIENT_RECALL_22\n");
 					FetalRecallDialog(hWnd, i + sCurrFile);
+					printf("IDC_PATIENT_RECALL_333\n");
 				}
+				printf("IDC_PATIENT_RECALL_OPEN_B22 %d %d\n",i,num);
 			}
+			printf("IDC_PATIENT_RECALL_OPEN_B\n");
 			break;
 
 		case IDC_PATIENT_RECALL_DELETE_B:
@@ -355,9 +363,9 @@ BOOL PtnRecallDlg_OnCommand (HWND hWnd, DWORD wParam, LPARAM lParam)
 			return ret;
 	}
 	ret32 = DlgButtonCheckedNum(hWnd, IDC_PATIENT_RECALL_ID1_C, count);
-	if (num == ret32)
+	if (num == ret32 && num)//当前页全选且至少有一个避免翻到最后一页后误出现全选
 	{
-		CheckDlgButton(hWnd, IDC_PATIENT_RECALL_ALL_C, TRUE);
+ 		CheckDlgButton(hWnd, IDC_PATIENT_RECALL_ALL_C, TRUE);
 	}
 	else
 	{
@@ -409,7 +417,7 @@ int GetPatientInfoList(FILEMRSYS *this)
 }
 
 VOID PtnRecallDlg_Init(HWND hWnd)
-{
+{	printf("回顾走这里PtnRecallDlg_Init111\n");
 	HWND hCtrl;
 	INT32 i;
 	for (i = IDC_PATIENT_RECALL_ID_L; i < IDC_PATIENT_RECALL_EXIT_B; i++)
@@ -419,7 +427,7 @@ VOID PtnRecallDlg_Init(HWND hWnd)
 			return;
 		SetWindowBkColor(hCtrl, ((PWIN)hWnd)->iBkColor);
 	}
-	
+	printf("回顾走这里PtnRecallDlg_Init222\n");
 	hCtrl = GetDlgItem(hWnd, IDC_PATIENT_RECALL_PGUP_B);
 	SetWindowTextColor(hCtrl, GetWindowElementColor(WEC_EXCOLOR_WHITESMOKE));
 	hCtrl = GetDlgItem(hWnd, IDC_PATIENT_RECALL_PGDN_B);
@@ -428,8 +436,10 @@ VOID PtnRecallDlg_Init(HWND hWnd)
 //	SetWindowBkColor(hCtrl, GetWindowElementColor(WEC_EXCOLOR_SILVER));
 //	SetWindowTextColor(hCtrl, ((PWIN)hWnd)->iBkColor);
 	hCtrl = GetDlgItem(hWnd, IDC_PATIENT_RECALL_SCROLL_L);
+	printf("回顾走这里PtnRecallDlg_Init333\n");
 	if (!hCtrl)
 		return;
+	printf("回顾走这里PtnRecallDlg_Init444\n");
 	SetWindowBkColor(hCtrl, GetWindowElementColor(WEC_EXCOLOR_GAINSBORO));
 	hCtrl = GetDlgItem(hWnd, IDC_PATIENT_RECALL_OPEN_B);
 	EnableWindow(hCtrl, FALSE);
@@ -446,6 +456,7 @@ VOID PtnRecallDlg_Init(HWND hWnd)
 		if (hCtrl = GetDlgItem(hWnd, IDC_PATIENT_RECALL_PGDN_B))
 			EnableWindow(hCtrl, FALSE);
 	}
+	
 }
 
 static INT32 PtnRecallDlgProc (HANDLE hWnd, INT32 message, DWORD wParam, LPARAM lParam)
@@ -460,6 +471,7 @@ static INT32 PtnRecallDlgProc (HANDLE hWnd, INT32 message, DWORD wParam, LPARAM 
 			{
 				HWND hCtrl = GetDlgItem(hWnd, IDC_PATIENT_RECALL_FIRST);
 				DrawScrollV(hCtrl, 0, FmsPtr->GetSaveNum(FmsPtr), 8);
+				printf("为何要跑到这里呢\n");
 				ShowPatientInfoList(hWnd, 0, FmsPtr->GetSaveNum(FmsPtr));
 			}
 			break;
@@ -625,6 +637,7 @@ VOID PatientRecallDialog(HANDLE hOwner)
 	   DLG_OFFSET, CTRL_HEIGHT, DLG_WIDTH, DLG_HEIGHT,
 	   STR_DLG_PNT_RECALL_MANAGER, 0, NULL, 0L,
 	};
+	printf("回顾走这里111PatientRecallDialog\n");
 	INT16 i, loops;
 	loops = TABLESIZE(ctrl_data);
 	WNDMEM   wndMem;
@@ -761,29 +774,35 @@ VOID InsertNewPatientID(BOOL insert)
 }
 
 VOID EndPatientFile(VOID)
-{
+{	printf("评分second 1111\n");
 	if (get_analysis_enable())
-	{
+	{printf("评分second 2222\n");
 		SetAnalySendFlag(TRUE);
+		printf("评分second 3333\n");
 		if (AnalySendData())
 			SetAnalySendFlag(FALSE);
+		printf("评分second 4444\n");
 		PutAnalysisResultIntoFile();
+		printf("评分second 5555\n");
 	}
+	printf("评分second 6666\n");
 	FmsPtr->ClosePtnFile(FmsPtr);
 	NewPatient();
+	printf("评分second 7777\n");
 	ShowPatinetInfo();
+	printf("评分second 8888\n");
 }
 
 INT32 ConfirmNoAnalysis(HWND hParentWnd)
 {
-	printf("// 有效数据不足时不需要确认评分111\n");
+	printf("ConfirmNoAnalysis111\n");
 	if (!get_analysis_enable())
 		return TRUE;
-	printf("// 有效数据不足时不需要确认评分222\n");
+	printf("ConfirmNoAnalysis222\n");
 	// 有效数据不足时不需要确认评分
 	if (AnalyConfig.nr_valid < 1190)
 		return TRUE;
-	printf("// 有效数据不足时不需要确认评分333333\n");
+	printf("ConfirmNoAnalysis333\n");
 	return MessageBox(hParentWnd,
 			STR_MSGBOX_PRO_CONFIRM_ANALYSIS1, STR_MSGBOX_PRO_CONFIRM_ANALYSIS2,
 			STR_DLG_PATIENT_SAVE, MB_ALIGNCENTER | MB_YESNO, SysGui_HTSK);
@@ -814,27 +833,30 @@ static INT16   Patient_OnCommand (HWND hWnd, DWORD wParam, LPARAM lParam)
 			break;
 
 		case IDC_PATIENT_SETUP_NEWPATIENT_B:
+			
 			if (FmsPtr->GetCurrSaveIndex(FmsPtr) < 0)//
-			{
-				printf("按下病人归档或新病人?111111\n");
+			{printf("新病人走这里111\n");
 				NewPatient();
+				printf("新病人走这里222\n");
 				FmsPtr->NewPatient(FmsPtr);
 				InsertNewPatientID(1);
 				EnbPatientInfoEditFlag(TRUE);
+				printf("新病人走这里333\n");
 				SetWindowText(GetDlgItem(hWnd, IDC_PATIENT_SETUP_NEWPATIENT_B),
 					STR_DLG_PATIENT_SAVE);
 				FmsPtr->PutPtnInfo(FmsPtr, &PatientInfo);
+				printf("新病人走这里444\n");
 				ShowPatinetInfo();
+				printf("新病人走这里555\n");
 				FhrStatus.initStatus = TRUE;
 			}
 			else
-			{
-				printf("按下病人归档或新病人?1222222\n");
+			{printf("病人归档走这里111\n");
 				if (IDNO == ConfirmNoAnalysis(hWnd))
 					break;
-				printf("按下病人归档或新病人?4444444\n");
+				printf("病人归档走这里222\n");
 				EndPatientFile();
-				printf("按下病人归档或新病人?5555555555\n");
+				printf("病人归档走这里333\n");
 				SetEditText(IDD_PATIENT_SETUP, IDC_PATIENT_SETUP_NAME_EDIT, "");
 				SetEditText(IDD_PATIENT_SETUP, IDC_PATIENT_SETUP_ID_EDIT, "");
 				SetEditText(IDD_PATIENT_SETUP, IDC_PATIENT_SETUP_NOTE_EDIT, "");
@@ -844,15 +866,16 @@ static INT16   Patient_OnCommand (HWND hWnd, DWORD wParam, LPARAM lParam)
 				SetEditText(IDD_PATIENT_SETUP, IDC_PATIENT_SETUP_GTIMES_EDIT, "");
 				strcpy(LoadString(STR_MAIN_TOPBAR_NAME_NAME), PatientInfo.patientName);
 				strcpy(LoadString(STR_MAIN_TOPBAR_ID_NUM), PatientInfo.patientID);
-				printf("按下病人归档或新病人?877777777\n");
 				EnbPatientInfoEditFlag(FALSE);
+				printf("病人归档走这里444\n");
 				SetWindowText(GetDlgItem(hWnd, IDC_PATIENT_SETUP_NEWPATIENT_B),
 					STR_MAIN_BOTTOM_NEWPATIENT);
-				printf("按下病人归档或新病人?888888\n");
+				printf("病人归档走这里555\n");
 			}
 			break;
 
 		case IDC_PATIENT_SETUP_RECALL_B:
+			printf("回顾走这里111\n");
 			PatientRecallDialog(hWnd);
 			break;
 
@@ -870,9 +893,13 @@ static INT16   Patient_OnCommand (HWND hWnd, DWORD wParam, LPARAM lParam)
 			break;
 
 		case IDC_PATIENT_SETUP_ANALY_B:
+			printf("按下评分111\n");
 			AnalysisDialog(hWnd);
+			printf("按下评分222\n");
 			SendMessage(hWnd, MSG_INITDIALOG, 0, 0);
+			printf("按下评分333\n");
 			SendMessage(hWnd, MSG_SHOWWINDOW, 0, 0);
+			printf("按下评分444\n");
 			break;
 
 		case IDC_PATIENT_SETUP_NAME_EDIT:
@@ -937,7 +964,7 @@ static INT16   Patient_OnCommand (HWND hWnd, DWORD wParam, LPARAM lParam)
 			{
 				INT32 value = PatientInfo.patientAge;
 				char Info[32];
-				sprintf(Info, "%s0~99", LoadString(STR_DLG_PATIENT_AGE));
+				sprintf(Info, "%s0~99", LoadString(STR_DLG_PATIENT_AGE_DLG));//(STR_DLG_PATIENT_AGE));
 				SelectKeyboardType(KEYBOARD_UNS_INT, Info, Info);
 				UseKeyboard(hWnd, LOWORD(wParam),(LPARAM)&value);
 				if (value != PatientInfo.patientAge)
@@ -961,9 +988,9 @@ static INT16   Patient_OnCommand (HWND hWnd, DWORD wParam, LPARAM lParam)
 			if (EN_CLICKED == HIWORD(wParam))
 			{
 				INT32 value = PatientInfo.gestationalWeeks;
-				char Info[32];
+				char Info[64];
 				sprintf(Info, "%s20~45",
-					LoadString(STR_DLG_PATIENT_GESTATIONAL));
+					LoadString(STR_DLG_PATIENT_GESTATIONAL_DLG));//STR_DLG_PATIENT_GESTATIONAL));
 				SelectKeyboardType(KEYBOARD_UNS_INT, Info, Info);
 				UseKeyboard(hWnd, LOWORD(wParam),(LPARAM)&value);
 				if (value != PatientInfo.gestationalWeeks)
@@ -972,6 +999,14 @@ static INT16   Patient_OnCommand (HWND hWnd, DWORD wParam, LPARAM lParam)
 					{
 						PatientInfo.gestationalWeeks = (UINT8)value;
 					}
+					else if(value <20)
+					{
+					    PatientInfo.gestationalWeeks = 20;
+					}
+					else if(value >45)
+					{
+					    PatientInfo.gestationalWeeks = 45;
+					}			    
 					SetEditboxIntValue(IDD_PATIENT_SETUP,
 								LOWORD(wParam), PatientInfo.gestationalWeeks);
 					FmsPtr->PutPtnInfo(FmsPtr, &PatientInfo);
@@ -984,7 +1019,7 @@ static INT16   Patient_OnCommand (HWND hWnd, DWORD wParam, LPARAM lParam)
 			{
 				INT32 value = PatientInfo.gestationalDay;
 				char Info[8];
-				strcpy(Info, "0~6d");
+				strcpy(Info, "0~6");
 				SelectKeyboardType(KEYBOARD_UNS_INT, Info, Info);
 				UseKeyboard(hWnd, LOWORD(wParam),(LPARAM)&value);
 				if (value != PatientInfo.gestationalDay)
@@ -992,6 +1027,11 @@ static INT16   Patient_OnCommand (HWND hWnd, DWORD wParam, LPARAM lParam)
 					if (value >= 0 && value < 7)
 					{
 						PatientInfo.gestationalDay= (UINT8)value;
+					}
+					else
+					{
+						PatientInfo.gestationalDay= 6;
+
 					}
 					SetEditboxIntValue(IDD_PATIENT_SETUP,
 								LOWORD(wParam), PatientInfo.gestationalDay);
@@ -1006,7 +1046,7 @@ static INT16   Patient_OnCommand (HWND hWnd, DWORD wParam, LPARAM lParam)
 				INT32 value = PatientInfo.gestationalTimes;
 				char Info[32];
 				sprintf(Info, "%s1~99",
-					LoadString(STR_DLG_PATIENT_GTIMES));
+					LoadString(STR_DLG_PATIENT_GTIMES_DLG));//(STR_DLG_PATIENT_GTIMES));
  				SelectKeyboardType(KEYBOARD_UNS_INT, Info, Info);
 				UseKeyboard(hWnd, LOWORD(wParam),(LPARAM)&value);
 				if (value != PatientInfo.gestationalTimes)
@@ -1224,9 +1264,11 @@ VOID  PatientSetupDialog (HWND parent)
 		DLG_FONT_HIGH = 12,
 		DLG_NOTE_LINE = 5,
 		DLG_ROW6_H	= DLG_NOTE_LINE * (DLG_FONT_HIGH + 2),
-		DLG_ROW7_Y	= DLG_ROW6_Y + DLG_ROW6_H,
-		DLG_ROW8_Y	= DLG_ROW7_Y + DLG_ROW_H,
-			DLG_HIGH  = DLG_ROW8_Y + DLG_ROW_H + STATIC_OFFSET + DLG_MENU_HIGHT,
+		DLG_ROW7_Y	= DLG_ROW6_Y + DLG_ROW_H,
+		DLG_ROW8_Y	= DLG_ROW7_Y + DLG_ROW6_H,
+		DLG_ROW9_Y	= DLG_ROW8_Y + DLG_ROW_H,
+
+			DLG_HIGH  = DLG_ROW9_Y + DLG_ROW_H + STATIC_OFFSET + DLG_MENU_HIGHT,
 			DLG_XPOS  = (SCREEN_WIDTH - DLG_WIDTH) / 2,
 			DLG_YPOS  = SCREEN_HIGH - DLG_HIGH - BOTTOMBAR_HEIGHT - DLG_OFFSET
 	};
@@ -1247,6 +1289,10 @@ VOID  PatientSetupDialog (HWND parent)
 	EDITDATA	edt_age  = {0};
 	EDITDATA	edt_gWek = {0};
 	EDITDATA	edt_gDay = {0};
+
+	EDITDATA	edt_gWekUnit = {0};
+	EDITDATA	edt_gDayUnit = {0};
+	
 	EDITDATA	edt_gtms = {0};
 	EDITDATA	edt_note = {0};
 
@@ -1256,19 +1302,27 @@ VOID  PatientSetupDialog (HWND parent)
 		{ DLG_COLUMN1_X, DLG_ROW2_Y + DLG_STATIC },
 		{ DLG_COLUMN1_X, DLG_ROW3_Y + DLG_STATIC },
 		{ DLG_COLUMN1_X, DLG_ROW4_Y + DLG_STATIC },
-		{ DLG_COLUMN1_X, DLG_ROW5_Y + DLG_STATIC },
 		{ DLG_COLUMN1_X, DLG_ROW6_Y + DLG_STATIC },
+		{ DLG_COLUMN1_X, DLG_ROW7_Y + DLG_STATIC },
 			{ DLG_COLUMN2_X, DLG_ROW1_Y },
 			{ DLG_COLUMN2_X, DLG_ROW2_Y },
 			{ DLG_COLUMN2_X, DLG_ROW3_Y },
-			{ DLG_COLUMN2_X, DLG_ROW4_Y },
-			{ DLG_COLUMN4_X, DLG_ROW4_Y },//day
-			{ DLG_COLUMN2_X, DLG_ROW5_Y },
+			{ DLG_COLUMN2_X, DLG_ROW4_Y },//week
+			//{ DLG_COLUMN4_X, DLG_ROW4_Y },//day
+			{ DLG_COLUMN2_X, DLG_ROW5_Y },//day
+
+            { DLG_COLUMN2_X+88+5, DLG_ROW4_Y },//week
+			{ DLG_COLUMN2_X+88+5, DLG_ROW5_Y },//day
+
+//			{DLG_COLUMN2_X+88-30+5,DLG_ROW4_Y+ DLG_STATIC},
+//			{DLG_COLUMN4_X+88-30+5,DLG_ROW4_Y+ DLG_STATIC},
+			
 			{ DLG_COLUMN2_X, DLG_ROW6_Y },
-		{ DLG_COLUMN1_X, DLG_ROW7_Y },
+			{ DLG_COLUMN2_X, DLG_ROW7_Y },
 		{ DLG_COLUMN1_X, DLG_ROW8_Y },
-		{ DLG_COLUMN3_X, DLG_ROW7_Y },
+		{ DLG_COLUMN1_X, DLG_ROW9_Y },
 		{ DLG_COLUMN3_X, DLG_ROW8_Y },
+		{ DLG_COLUMN3_X, DLG_ROW9_Y },
 		{ DLG_WIDTH-EXIT_ICON_WIDTH - DLG_OFFSET,
 			-(DLG_MENU_HIGHT + EXIT_ICON_HIGH) / 2 }
 	};
@@ -1284,8 +1338,12 @@ VOID  PatientSetupDialog (HWND parent)
 			{ DLG_COLUMN2_W,	STATIC_HEIGHT   },
 			{ DLG_COLUMN2_W,	STATIC_HEIGHT   },
 			{ DLG_COLUMN2_W,	STATIC_HEIGHT   },
-			{ 88,	STATIC_HEIGHT   },
-			{ 88,	STATIC_HEIGHT   },
+			{ 88,	STATIC_HEIGHT   },//week
+			{ 88,	STATIC_HEIGHT   },//day
+
+            { 88,	STATIC_HEIGHT   },//week
+			{ 88,	STATIC_HEIGHT   },//day
+			
 			{ DLG_COLUMN2_W,	STATIC_HEIGHT   },
 			{ DLG_COLUMN2_W,	DLG_ROW6_H	  },
 		{ DLG_COLUMN3_W, DLG_ROW_H },
@@ -1329,6 +1387,14 @@ VOID  PatientSetupDialog (HWND parent)
 
 		{ CTRL_EDIT,	WS_VISIBLE | WS_TABSTOP | ES_LEFT, WS_EX_NONE, 0, 0, 0, 0,
 			IDC_PATIENT_SETUP_GESTATIONAL_DAY_EDIT, STR_DLG_PATIENT_GESTATIONAL_DAY, 0L, 0L},
+        //add unit,panhonghui
+        { CTRL_STATIC,  WS_VISIBLE | SS_SIMPLE, WS_EX_NONE, 0, 0, 0, 0,
+			IDC_PATIENT_SETUP_GESTATIONAL_UNIT_EDIT, STR_DLG_PATIENT_GESTATIONAL_WEEK_UNIT, 
+			0L, 0L},
+
+		{ CTRL_STATIC,  WS_VISIBLE | SS_SIMPLE, WS_EX_NONE, 0, 0, 0, 0,
+			IDC_PATIENT_SETUP_GESTATIONAL_DAY_UNIT_EDIT, STR_DLG_PATIENT_GESTATIONAL_DAY_UNIT,
+			0L, 0L},
 
 		{ CTRL_EDIT,	WS_VISIBLE | WS_TABSTOP | ES_LEFT, WS_EX_NONE, 0, 0, 0, 0,
 			IDC_PATIENT_SETUP_GTIMES_EDIT, STR_DLG_PATIENT_GTIMES_TIMES, 0L, 0L},
@@ -1386,6 +1452,12 @@ VOID  PatientSetupDialog (HWND parent)
 
 	SetCtrlDataAddData2(ctrl_data, loops, IDC_PATIENT_SETUP_GESTATIONAL_DAY_EDIT, 
 						(UINT32)&edt_gDay);
+						
+    SetCtrlDataAddData2(ctrl_data, loops, IDC_PATIENT_SETUP_GESTATIONAL_UNIT_EDIT, 
+						(UINT32)&edt_gWekUnit);
+
+	SetCtrlDataAddData2(ctrl_data, loops, IDC_PATIENT_SETUP_GESTATIONAL_DAY_UNIT_EDIT, 
+						(UINT32)&edt_gDayUnit);
 
 	SetCtrlDataAddData2(ctrl_data, loops, IDC_PATIENT_SETUP_GTIMES_EDIT, 
 						(UINT32)&edt_gtms);

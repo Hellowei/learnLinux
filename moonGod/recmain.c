@@ -445,7 +445,6 @@ BOOL RecEventClassInitOps(VOID)
 				break;
 
 			case REC_EVENT_RECALLALL:
-				printf("lPPPPPPPPPPp\n");
 				RecEventClass.func[i] = RecRecallAllStart;
 				break;
 

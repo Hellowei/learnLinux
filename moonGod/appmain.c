@@ -1368,7 +1368,7 @@ BOOL  InitMonitor (VOID)
     MonitorConfig.moduleInfo[MID_RECODER].OnLine= TRUE;
 
     /** MONITOR INFO  **/
-    MonitorInfo.inDemo             = ON;//
+    MonitorInfo.inDemo             = ON;//0601@vinYin
     MonitorInfo.inFrozen           = OFF;          
     MonitorInfo.skipKeyMessage     = FALSE;        
     

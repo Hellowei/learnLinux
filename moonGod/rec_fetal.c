@@ -1970,7 +1970,7 @@ static INT32 PrintCSTResult(PRECEVENTCLASS this,INT32 *X,INT32 *Y,ARET_SAVE *pRe
 		else if(pResult->slowType == 3)//±äÒì
 			sprintf(txt, "%s", LoadString(STR_DLG_ANLS_CHANGE));
 		else
-			strcpy(txt, "--");
+			sprintf(txt, "%d", pResult->tdslow);
 	else
 		sprintf(txt, "%s", LoadString(STR_DLG_ANLS_NOTHING));
 	RecTextOC(this, x1, y1, w, h, txt);
@@ -2632,13 +2632,13 @@ static INT32 RecPutRecallAnaly (PRECEVENTCLASS this, INT32 start)
 	y = y2 + 20;
 	sprintf(txt, "%s",LoadString(STR_DLG_ANLS_DIAGNOSIS));
 	RecTextOut(this, x1, y, txt);
-	
+
 	x1 = x;
-	y = y2 + 60;
-	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_DIAGNOSIS));
-	RecTextOut(this, x1, y, txt);
-	x1 = ((x2 >> 2) << 1);
 	y = RecConfig.regEnd[PAPER_REG_TOCO] - 40;
+	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_DATAONLYREFERENCE));
+	RecTextOut(this, x1, y, txt);
+
+	x1 = ((x2 >> 2) << 1);
 	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_SIGNATURE));
 	RecTextOut(this, x1, y, txt);
 	x1 = x2 * 3 / 4;

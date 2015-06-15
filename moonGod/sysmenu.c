@@ -541,7 +541,7 @@ static VOID SystemSetupInit(HWND hWnd, DWORD wParam, LPARAM lParam)
 #endif
 }
 
-
+BOOL g_changeSpeed = FALSE;//事件且又变速的情况下，改变画刷 @VinYin 2015-05-22
 static BOOL SystemSetup_OnCommand(HWND hWnd, DWORD wParam, LPARAM lParam)
 {
 	BOOL ret;
@@ -617,7 +617,7 @@ static BOOL SystemSetup_OnCommand(HWND hWnd, DWORD wParam, LPARAM lParam)
 										  FhrConfig.source);
 						Save_Config(CFG_KEYID_FHRVOICECHANNEL);
 					}
-					FetalSetMoudle(FALSE);
+					FetalSetMoudle(FALSE,FALSE);
 					ClearAllAlarm(0);
 					
 				    if ((FhrConfig.mode != 2) && ((MonitorConfig.faceType == FACE_STD 
@@ -663,7 +663,7 @@ static BOOL SystemSetup_OnCommand(HWND hWnd, DWORD wParam, LPARAM lParam)
 				FhrConfig.source = ret;
 				//Save_Fetal_Config(NMAP_FHR_TYPE_CH_VOL_TOCO);
 				Save_Config(CFG_KEYID_FHRVOICECHANNEL);
-				FetalSetMoudle(FALSE);
+				FetalSetMoudle(FALSE,FALSE);
 			}
 			break;
 
@@ -687,7 +687,7 @@ static BOOL SystemSetup_OnCommand(HWND hWnd, DWORD wParam, LPARAM lParam)
 				FhrConfig.zero= ret;
 				Save_Config(CFG_KEYID_TOCOZEROVALUE);
 				//Save_Fetal_Config(NMAP_FHR_TYPE_CH_VOL_TOCO);
-				FetalSetMoudle(TRUE);
+				FetalSetMoudle(TRUE,FALSE);
 			}
 			break;
 
@@ -884,7 +884,7 @@ static BOOL SystemSetup_OnCommand(HWND hWnd, DWORD wParam, LPARAM lParam)
 				{
 					FhrConfig.volume = ret;
 					Save_Config(CFG_KEYID_FHRVOLUME);
-					FetalSetMoudle(FALSE);;
+					FetalSetMoudle(FALSE,FALSE);
 				}
 			}
 			break;
@@ -909,6 +909,7 @@ static BOOL SystemSetup_OnCommand(HWND hWnd, DWORD wParam, LPARAM lParam)
 					MonitorConfig.kbVol = ret;
 					Save_Config(CFG_KEYID_KEYVOLUME);
 					//Save_Fetal_Config(MMAP_ALARM_KEYBOARD_VOLUME);
+					
 				}
 				
 			}
@@ -930,10 +931,12 @@ static BOOL SystemSetup_OnCommand(HWND hWnd, DWORD wParam, LPARAM lParam)
 				}
 				if (ret != FhrConfig.sweep)
 				{
+					g_changeSpeed = TRUE;//事件且又变速的情况下，改变画刷 @VinYin 2015-05-22
 					FhrConfig.sweep= ret;
 					ReDrawFetalWave(FetalWavePrint);
 					ShowSweepSpeed();
 					Save_Config(CFG_KEYID_PRINTSPEED);
+					g_changeSpeed = FALSE;//事件且又变速的情况下，改变画刷 @VinYin 2015-05-22
 				}
 			}
 			break;

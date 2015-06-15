@@ -152,7 +152,9 @@ static PutRecallFetalMark(HDC hdc, INT32 xPos, UINT8 mark)
 	SetBrushColor(hdc, forecolor);
 	SetBkColor(hdc, backcolor);
 }
-
+extern TOCOADDSPEED tocoAddSpeed[100];
+extern SLOWFHR slowFhr[100] ;
+extern FASTFHR fastFhr[100] ;
 static VOID
 	DrawFetalRecallFhrWave(HWND hWnd, PFETALDATA data, INT32 index, INT32 len)
 {
@@ -166,7 +168,10 @@ static VOID
 	HDC hdc = GetDC(hWnd);
 	loops = len;
 	// 显示波形
-	
+	INT x1,x2,x3,y1,y2,k;
+	INT xx1,xx2,xx3,yy1,yy2;
+	x1 = x2 = x3 = 0;
+	xx1 = xx2 = xx3 = 0;
 	SetPenColor(hdc, PIXEL_red);
 	for (i = 0; i < loops; i++)
 	{
@@ -191,6 +196,55 @@ static VOID
 				DrawLine(hdc, i-1, oldPox2, i, newPox2);
 		}
 		oldPox2 = newPox2;
+		#if 1 
+		for (k = 0;k <100;k++)
+		{
+			if(slowFhr[k].start < 2)
+				break;
+			if(ABS(slowFhr[k].start-n*2)<2)
+			{
+				SetPenColor(hdc, color1);
+				DrawLine(hdc, i, 120, i, 90);
+				break;
+			}
+			if(ABS(slowFhr[k].maxPosX-n*2)<2)
+			{
+				SetPenColor(hdc, color1);
+				DrawLine(hdc, i, 150, i, 120);
+				break;
+			}
+		
+			if(ABS(slowFhr[k].end-n*2)<2)
+			{
+				SetPenColor(hdc, color1);
+				DrawLine(hdc, i, 180, i, 150);
+				break;
+			}
+		}
+		
+		for (k = 0;k <100;k++)
+		{
+			if(ABS(fastFhr[k].start-n*2)<2 )
+			{
+				SetPenColor(hdc, color2);
+				DrawLine(hdc, i, 75, i, 90);
+				break;
+			}
+			if(ABS(fastFhr[k].maxPosX-n*2)<2 )
+			{
+				SetPenColor(hdc, color2);
+				DrawLine(hdc, i, 50, i, 75);
+				break;
+			}
+			if(ABS(fastFhr[k].end-n*2)<2 )
+			{
+				SetPenColor(hdc, color2);
+				DrawLine(hdc, i, 20, i, 50);
+				break;
+			}
+		}
+		
+		#endif
 	}
 	// 显示事件
 	m = 0;
@@ -214,10 +268,10 @@ static VOID
 	}
 	ReleaseDC(hdc);
 }
-
+extern TOCOADDSPEED tocoAddSpeed[100];
 static VOID
 	DrawFetalRecallTocoWave(HWND hWnd, PFETALDATA data, INT32 index, INT32 len)
-{
+{                      
 	int i, j, loops;
 	int ndx, n, m;
 	int newPox1, oldPox1 = 0;
@@ -228,17 +282,24 @@ static VOID
 	HDC hdc = GetDC(hWnd);
 	loops = len;
 	// 显示波形
+	INT x1,x2,x3,y1,y2,k;
+	x1 = x2 = x3 = 0;
+		/*for(i = 0 ;i < 2;i++)
+		{
+			
+			printf("宫dsfs压%d加速from (%d,%d)(%d,%d)  Max=(%d,%d)\n",i+1,tocoAddSpeed[i].startPosX,tocoAddSpeed[i].averageValue,tocoAddSpeed[i].endPosX
+				,tocoAddSpeed[i].averageValue,tocoAddSpeed[i].maxPosX,tocoAddSpeed[i].maxValue);
+		}*/
 	for (i = 0; i < loops; i++)
-	{
+	{	
 		ndx = (i * RECALL_PAGE_DATA_NUMBER * FETAL_SAMPLE_RATE + 648 / 2) / 648;
-		n = (ndx / FETAL_SAMPLE_RATE) + index;
+		n = (ndx / FETAL_SAMPLE_RATE) + index;//n为第几秒
 		m = (ndx & 0x03);
 		newPox1 = RecallScaleWave(100, 0, 0, 122, data[n].wave[m].toco) - 1;
 		newPox2 = RecallScaleWave( 40, 0, 5,  45, data[n].wave[m].afm) + 3;
 		SetPenColor(hdc, color1);
 		if (oldPox1 > 0)
 		{
-//			if (ABS(newPox1 - oldPox1) < 10)
 			{
 				DrawLine(hdc, i-1, oldPox1, i, newPox1);
 			}
@@ -247,12 +308,33 @@ static VOID
 		SetPenColor(hdc, color2);
 		if (oldPox2 > 0)
 		{
-//			if (ABS(newPox1 - oldPox1) < 10)
 			{
 				DrawLine(hdc, i-1, oldPox2, i, newPox2);
 			}
 		}
 		oldPox2 = newPox2;
+		for (k = 0;k <100;k++)
+		{
+			if(ABS(tocoAddSpeed[k].startPosX-n*2)<2)
+			{
+				SetPenColor(hdc, color2);
+				DrawLine(hdc, i, 80, i, 100);
+				break;
+			}
+			if(ABS(tocoAddSpeed[k].maxPosX-n*2)<2)
+			{
+				SetPenColor(hdc, color2);
+				DrawLine(hdc, i, 50, i, 80);
+				break;
+			}
+			if(ABS(tocoAddSpeed[k].endPosX-n*2)<2)
+			{
+				SetPenColor(hdc, color2);
+				DrawLine(hdc, i, 10, i, 50);
+				break;
+			}
+		}
+
 	}
 	// 显示标记
 	m = 0;
@@ -376,31 +458,33 @@ static VOID ShowPationInfo(HWND hWnd)
 
 static VOID FetalRecallShow(HWND hWnd)
 {
-	printf("点击历史open  dead here UUUUUUUU000\n");
 	HWND hCtrl;
 	HDC hdc;
 	RECT rc;
 	int x, y, offset;
+	printf("FetalRecallShowaaaqqq\n");
 	if (hCtrl = GetDlgItem(hWnd, IDC_FETAL_RECALL_FHRGPH_L))
-	{	printf("UUUUUUUU111\n");
+	{	printf("FetalRecall0000000ss%d\n",hCtrl);
 		SetRect(&rc, 0, 0, RecallFhrBmpMem.cx, RecallFhrBmpMem.cy + 1);
+		printf("FetalRecall111111111\n");
 		hdc = GetDC(hCtrl);
+		printf("FetalRecall2222222222\n");
 		FillRectEx(hdc, &rc, RecallFhrBmpMem.cx, RecallFhrBmpMem.data);
+		printf("FetalRecall3333333\n");
 		ReleaseDC(hdc);
-		printf("UUUUUUUU222\n");
+		printf("FetalReca44444444444\n");
 	}
-	
+	printf("FetalRecallShowaaaa\n");
 	if (hCtrl = GetDlgItem(hWnd, IDC_FETAL_RECALL_TOCOGPH_L))
-	{	printf("UUUUUUUU333\n");
+	{
 		SetRect(&rc, 0, 0, RecallTOCOBmpMem.cx, RecallTOCOBmpMem.cy + 1);
 		hdc = GetDC(hCtrl);
 		FillRectEx(hdc, &rc, RecallTOCOBmpMem.cx, RecallTOCOBmpMem.data);
 		ReleaseDC(hdc);
-		printf("UUUUUUUU444\n");
 	}
-	printf("UUUUUUUU5555\n");
+	printf("FetalRecallShowbbbb\n");
 	RefreshRecallGraph(hWnd);
-		printf("UUUUUUssssssssssUU\n");
+	printf("FetalRecallShowccc\n");
 }
 
 static VOID DispAnalysis(HDC hdc, PRECT prc, ARET_SAVE *pRet)
@@ -419,7 +503,7 @@ static VOID DispAnalysis(HDC hdc, PRECT prc, ARET_SAVE *pRet)
 
 	//适应俄语界面调整
 	Rect(hdc, x, y, x + 80 * 5, y + KEY_HEIGHT * 6+KEY_HEIGHT*1.8);
-	printf("rrrr(%d,%d)\n",x,y);
+	
 	Line(hdc, x, y + KEY_HEIGHT * 1+KEY_HEIGHT*0.3*1, x + 80 * 5, y + KEY_HEIGHT * 1+KEY_HEIGHT*0.3*1);
 	Line(hdc, x, y + KEY_HEIGHT * 2+KEY_HEIGHT*0.3*2, x + 80 * 5, y + KEY_HEIGHT * 2+KEY_HEIGHT*0.3*2);
 	Line(hdc, x, y + KEY_HEIGHT * 3+KEY_HEIGHT*0.3*3, x + 80 * 5, y + KEY_HEIGHT * 3+KEY_HEIGHT*0.3*3);
@@ -571,6 +655,10 @@ static VOID DispAnalysis(HDC hdc, PRECT prc, ARET_SAVE *pRet)
 	plocal_time = localtime((const time_t *)&(pRet->endtime));
 	sprintf(txt, "%s: %02d:%02d:%02d", LoadString(STR_PRINT_TIME_END), 
 		plocal_time->tm_hour, plocal_time->tm_min, plocal_time->tm_sec);
+	TextOut(hdc, x, y1, txt);
+	///数据仅供参考
+	y1 += STATIC_HEIGHT;
+	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_DATAONLYREFERENCE)); 
 	TextOut(hdc, x, y1, txt);
 	
 }
@@ -746,7 +834,10 @@ static VOID DispAnalysisFischer(HDC hdc, PRECT prc, ARET_SAVE *pRet)
 	sprintf(txt, "%s: %02d:%02d:%02d", LoadString(STR_PRINT_TIME_END), 
 		plocal_time->tm_hour, plocal_time->tm_min, plocal_time->tm_sec);
 	TextOut(hdc, x, y1, txt);
-	
+	///数据仅供参考
+	y1 += STATIC_HEIGHT;
+	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_DATAONLYREFERENCE)); 
+	TextOut(hdc, x, y1, txt);
 }
 
 
@@ -937,6 +1028,10 @@ static VOID DispAnalysisKrebs(HDC hdc, PRECT prc, ARET_SAVE *pRet)
 	sprintf(txt, "%s: %02d:%02d:%02d", LoadString(STR_PRINT_TIME_END), 
 		plocal_time->tm_hour, plocal_time->tm_min, plocal_time->tm_sec);
 	TextOut(hdc, x, y1, txt);
+	///数据仅供参考
+	y1 += STATIC_HEIGHT;
+	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_DATAONLYREFERENCE)); 
+	TextOut(hdc, x, y1, txt);
 }
 //cst评分方法 @vinyin 2015-05-05
 static VOID DispAnalysisCST(HDC hdc, PRECT prc, ARET_SAVE *pRet)
@@ -1121,7 +1216,10 @@ static VOID DispAnalysisCST(HDC hdc, PRECT prc, ARET_SAVE *pRet)
 	sprintf(txt, "%s: %02d:%02d:%02d", LoadString(STR_PRINT_TIME_END), 
 		plocal_time->tm_hour, plocal_time->tm_min, plocal_time->tm_sec);
 	TextOut(hdc, x, y1, txt);
-	
+	///数据仅供参考
+	y1 += STATIC_HEIGHT;
+	sprintf(txt, "%s", LoadString(STR_DLG_ANLS_DATAONLYREFERENCE)); 
+	TextOut(hdc, x, y1, txt);
 }
 
 static VOID DispPationAnalysis(HDC hdc, PRECT prc, ARET_SAVE *pRet)
@@ -1451,34 +1549,28 @@ static VOID FetalRecallInit(HWND hWnd)
 		SetWindowBkColor(hCtrl, ((PCONTROL)hWnd)->iBkColor);
 		EnableWindow(hCtrl, (RecallPatientPtr->ansis.len > 0));
 	}
-		printf("init recallanalyflag=false444444444\n");
 	if (hCtrl = GetDlgItem(hWnd, IDC_FETAL_RECALL_INFO_B))
 	{
 		SetWindowBkColor(hCtrl, ((PCONTROL)hWnd)->iBkColor);
 	}
-		printf("init recallanalyflag=false5555555555\n");
 	if (hCtrl = GetDlgItem(hWnd, IDC_FETAL_RECALL_PAGEUP_B))
 	{
 		SetWindowBkColor(hCtrl, ((PCONTROL)hWnd)->iBkColor);
 	}
-		printf("init recallanalyflag=false66666666\n");
 	if (hCtrl = GetDlgItem(hWnd, IDC_FETAL_RECALL_PAGEDN_B))
 	{
 		SetWindowBkColor(hCtrl, ((PCONTROL)hWnd)->iBkColor);
 	}
-		printf("init recallanalyflag=false999999999999999\n");
 	if (hCtrl = GetDlgItem(hWnd, IDC_FETAL_RECALL_PRINTPAGE_B))
 	{
 		SetWindowBkColor(hCtrl, ((PCONTROL)hWnd)->iBkColor);
 		EnableWindow(hCtrl, (RecallPatientPtr->ansis.len > 0));
 		//EnableWindow(hCtrl, FALSE); //去掉评分打印
 	}
-		printf("init recallanalyflag=false8888888888\n");
 	if (hCtrl = GetDlgItem(hWnd, IDC_FETAL_RECALL_PRINTALL_B))
 	{
 		SetWindowBkColor(hCtrl, ((PCONTROL)hWnd)->iBkColor);
 	}
-		printf("init recallanalyflag=false00000000\n");
 }
 //设置默认的评分方法
 static BOOL ChoseAnalysDlg_OnCommand(HWND hWnd, DWORD choiceID)
@@ -1640,7 +1732,6 @@ static BOOL FetalRecallOnCommand(HWND hWnd, WORD ctrl, WORD code)
 		case IDC_FETAL_RECALL_ANALY_B:
 			//modify by vinyin2015-05-05!RecallAnalyFlag;从单一评分拓展到4种评分
 			RecallAnalyFlag = !RecallAnalyFlag;
-			printf("你好RecallAnalyFlag=%d\n",RecallAnalyFlag);
 			ShowPatientAnalysis(hWnd, RecallAnalyFlag);
 			break;
 			
@@ -1685,15 +1776,17 @@ FetalRecallProc(HWND hWnd, INT32 message, WPARAM wParam, LPARAM lParam)
 	switch (message) 
 	{
 		case MSG_INITDIALOG:
+			printf("FetalRecallProc11\n");
 			FetalRecallInit(hWnd);
+			printf("FetalRecallProc22\n");
 			break;
 
 		case MSG_SHOWWINDOW:
-			printf("MSG_SHOWWINDOW111\n");
+			printf("FetalRecallProc33\n");
 			FetalRecallShow(hWnd);
-			printf("MSG_SHOWWINDOW222\n");
+			printf("FetalRecallProc44\n");
 			ShowPationInfo(hWnd);
-			printf("MSG_SHOWWINDOW333\n");
+			printf("FetalRecallProc55\n");
 			break;
 
 		case MSG_COMMAND:
@@ -1709,7 +1802,6 @@ FetalRecallProc(HWND hWnd, INT32 message, WPARAM wParam, LPARAM lParam)
 
 VOID FetalRecallDialog(HANDLE hOwner, INT16 index)
 {
-	printf("取出历史数据,%d\n",index);
 	RecallPatientPtr = FmsPtr->GetDataFile(FmsPtr, index);
 	
 	if (RecallPatientPtr == NULL)
@@ -1897,8 +1989,10 @@ VOID FetalRecallDialog(HANDLE hOwner, INT16 index)
 		IDC_FETAL_RECALL_PRINTALL_B,	(UINT32)&btn[i++]);
 	SetCtrlDataAddData2(ctrl_data, loops,
 		IDC_FETAL_RECALL_EXIT_B,		(UINT32)&btn_exit);
-
+	printf("FetalRecall打开进来Proc33\n");
 	DialogBoxIndirectParam(&dlg_data, hOwner, IDD_FETAL_RECALL,
 							FetalRecallProc, 0, &wndMem);
+	printf("recalldlg 打开进来 显示胎监记录回放\n");
 }
+
 

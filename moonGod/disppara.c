@@ -1226,7 +1226,9 @@ BOOL CreateDemoLabel(VOID)
 		if (FACE_MAX > face)
 		{
 			SetWindowBkColor(hCtrl, bkColor);
-			SetWindowFont(hCtrl, GetSystemFont(SYSLOGFONT_YAHEI17_FONT));
+			SetWindowFont(hCtrl, GetSystemFont(SYSLOGFONT_NOR_RUS));//SYSLOGFONT_REC_FONT
+			//SetWindowFont(hCtrl, GetSystemFont(SYSLOGFONT_YAHEI17_FONT));
+			
 			SetWindowTextColor(hCtrl, PIXEL_yellow);
 		}
 		else

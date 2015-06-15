@@ -89,13 +89,15 @@ INT32 BuildPacket(UCHAR mdlID, UCHAR cmdID, UCHAR *buffer)
 	buffer[2] = mdlID;
 	len = buffer[3] + 4;
 	buffer[4] = cmdID;
+	buffer[len+2] = buffer[len];//拿出data[3]值isNeedTocoAmend
+	buffer[len+3] = buffer[len+1];//拿出data[4]值0x05 
 	buffer[len++] = GetChkSum(buffer);
 	buffer[len++] = cUCAllCommPackEnd;
-	return len;
+	return len+2;//+2是后来拓展了协议 加多两字节分别是 修正宫压指令及其结尾
 }
 
 INT32 BuildPacket2(PACKETFRAME *pack)
-{
+{	
 	int len = pack->frame.len;
 	if (len == 0) return len;
 	pack->frame.stx = cUCAllCommPackSTX;
@@ -103,7 +105,7 @@ INT32 BuildPacket2(PACKETFRAME *pack)
 	len += FIELD_OFFSET(PACKETFRAME, frame.data[0]);
 	pack->buffer[len++] = GetChkSum(pack->buffer);
 	pack->buffer[len++] = cUCAllCommPackEnd;
-	return len;
+	return len +2;//+2是后来拓展了协议 加多两字节分别是 修正宫压指令及其结尾
 }
 
 // 将数据复制到数据包结构体

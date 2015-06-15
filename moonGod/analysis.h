@@ -12,7 +12,26 @@ typedef struct fischer_infoex{
 	CHAR   type;				// 变化类型
 	UINT16 point;			   // 所在位置(相对评分数据开头)
 }FISCINFOEX;
-
+	//宫压的加速(峰值、拐点)
+	typedef struct {
+		INT startPosX;//宫压开始加速位置
+		INT endPosX;///加速结束位置
+		INT maxPosX;//峰值位置
+		INT maxValue;//加速峰值
+		INT averageValue;//宫压基线。
+	}TOCOADDSPEED;
+		typedef struct _fastFhr{
+		INT maxPosX;
+		INT start;
+		INT end;
+		INT addValue;
+	}FASTFHR;
+	typedef struct _slowFhr{
+		INT maxPosX;
+		INT start;
+		INT downValue;//下降的振幅 早期晚期小于50 变异大于70
+		INT end;
+	}SLOWFHR;
 
 typedef struct _fhr_diagnose_ctrl
 {

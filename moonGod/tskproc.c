@@ -187,7 +187,7 @@ static VOID gui_OnSysKeyMsg (UINT32 wParam, UINT32 lParam)
 			 SetListBoxCurChoi(IDD_SYSTEM_CONFIG,
 				IDC_SYSTEM_CONFIG_FETAL_VOL_LB, FhrConfig.volume);
 			 Save_Config(CFG_KEYID_FHRVOLUME);
-			 FetalSetMoudle(FALSE);;
+			 FetalSetMoudle(FALSE,FALSE);
 			 break;
 
 		case KEY_VOL_MINUS:
@@ -200,7 +200,7 @@ static VOID gui_OnSysKeyMsg (UINT32 wParam, UINT32 lParam)
 			 SetListBoxCurChoi(IDD_SYSTEM_CONFIG,
 				IDC_SYSTEM_CONFIG_FETAL_VOL_LB, FhrConfig.volume);
 			 Save_Config(CFG_KEYID_FHRVOLUME);
-			 FetalSetMoudle(FALSE);;
+			 FetalSetMoudle(FALSE,FALSE);
 			 break;
 
 		case KEY_NEW_PATIENT:
@@ -214,7 +214,7 @@ static VOID gui_OnSysKeyMsg (UINT32 wParam, UINT32 lParam)
 			 break;
 
 		case KEY_TOCO:
-			 FetalSetMoudle(TRUE);
+			 FetalSetMoudle(TRUE,FALSE);
 			 break;
 
 		case KEY_EVENT:
@@ -747,7 +747,6 @@ INT32  RecTskProc (HANDLE hdl, INT32 msg, UINT32 wParam, UINT32 lParam)
 					break;
 
 				case REC_RECALL_ALL:
-					printf("¥Ú«Æ+REC_RECALL_ALLREC_RECALL_ALL++++++ %d¢\n",REC_EVENT_RECALLALL);
 					RecDealWithEvents(REC_EVENT_RECALLALL);
 					break;
 

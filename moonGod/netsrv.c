@@ -112,6 +112,15 @@ static int sNetBuildPacket (unsigned short packet_id,	// 包类型
 		data_len = 0;
 		len = 17;
 	}
+	#if 1//调试上送的胎心数据
+			if (NULL != data && packet_id == 46)
+			{
+				int k;
+				for(k = 0;k < data_len;k++)
+					printf("d[%d]=%u,",k+1,data[k]);
+				printf("\n");
+			}
+	#endif
 	buffer[0] = 0x55;
 	buffer[1] = 0xAA;
 
@@ -157,7 +166,8 @@ static int sNetBuildPacket (unsigned short packet_id,	// 包类型
 #define PKG_0x14	0x14	// 设备注销
 #define PKG_0x13	0x13	// 设备网络探测包，每秒一次
 							// 主要是探测服务器软件是否在运行
-#define PKG_0x2E   	0x2E	// 
+#define PKG_0x2E   	0x2E	// 胎监数据 
+#define PKG_0x5C    0x5C    // 胎监病人信息
 
 //产品信息，类型0x10
 typedef  struct  __PRODUCTINFO{
@@ -235,6 +245,7 @@ static void sPostConnectPacket(BOOL flag)
 	if (flag) // 
 	{
 		pBuf = Packet13;
+		
 		ret = sNetBuildPacket(PKG_0x13, TRUE, 0, NULL, 0, Packet13);
 	}
 	else
@@ -303,13 +314,14 @@ static BOOL CheckNetPacket(void *buffer, int len)
 static void sSendUdpPacket(int len, void *buffer)
 {
 	static int packNum = 0;
+	UINT16 packet_id = (len > 12)?PKG_0x5C:PKG_0x2E;//>12发病人信息 以@ptnifno开始
 	int packlen = 
-		sNetBuildPacket(PKG_0x2E, FALSE, packNum, buffer, len, sNetSendBuffer);
+		sNetBuildPacket(packet_id, FALSE, packNum, buffer, len, sNetSendBuffer);
 
 	int sendlen = sendto (sSockFd, sNetSendBuffer, packlen, 0,
 		(struct sockaddr*)&sToAddr, sizeof(struct sockaddr));
-	for (; sendlen > 0; sendlen--)
-		printf("sNetSendBuffer[%d] =%X\n", sendlen - 1, sNetSendBuffer[sendlen - 1]);
+	//for (; sendlen > 0; sendlen--)
+	//	printf("sNetSendBuffer[%d] =%X\n", sendlen - 1, sNetSendBuffer[sendlen - 1]);
 	packNum++;
 }
 

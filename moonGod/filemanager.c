@@ -1665,14 +1665,15 @@ static BOOL gen_NewPatient(FILEMRSYS *this)
 	FMSDATA *tmpThis;
 	if (tmpThis = gen_GetThisData(this))
 	{
-		short ndx = 0;
+		
 		if (tmpThis->fp)
 		{
 			this->ClosePtnFile(this);
 		}
 		tmpThis->curr = gen_GetNewSaveIndex(tmpThis);
 		if (tmpThis->curr >= DATA_SAVE_MAX)
-		{
+		{	
+			short ndx = DATA_SAVE_MAX-1;//删最老的而不是最新
 			this->DeletePatient(this, &ndx, 1);
 			tmpThis->curr = gen_GetNewSaveIndex(tmpThis);
 			if (tmpThis->curr >= DATA_SAVE_MAX)

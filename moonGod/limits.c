@@ -33,7 +33,6 @@ BOOL CheckRangeExceed( PARAM_LMTS_ID param_index, INT16 *param_value )
 	PARAM_LIMITS*   param_limits;
 	BOOL			exceed_range;
 	UINT8		   tmp;
-
 	if ((PARAM_LMTS_MIN  > param_index) || (PARAM_LMTS_MAX <= param_index))
 		return FALSE;
 	

@@ -69,7 +69,7 @@ VOID   EnterDemo(VOID)
 		ShowPatinetInfo();
 	}
 	DemoTempSave();
-	FetalSetMoudle(TRUE);;
+	FetalSetMoudle(TRUE,FALSE);
 	ClearAllAlarm(0);
 	EraseWavesBuffer();
 	SetFetalMonitorDemoStyle(TRUE);
@@ -90,7 +90,7 @@ VOID   ExitDemo(VOID)
 		ShowPatinetInfo();
 	}
 	DemoTempSave();
-	FetalSetMoudle(TRUE);;
+	FetalSetMoudle(TRUE,FALSE);
 	ClearAllAlarm(0);
 	// Make sensor off alarm being prompt only in three seconds after
 	// leaving demo mode

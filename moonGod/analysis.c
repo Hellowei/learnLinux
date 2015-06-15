@@ -20,11 +20,15 @@ typedef struct __tagAnalysisResult{
 }NST_RESULT;
 
 static NST_RESULT sNST;
-
+TOCOADDSPEED tocoAddSpeed[100] = {{0}};
+SLOWFHR slowFhr[100] = {{0}};
+FASTFHR fastFhr[100] = {{0}};
 static void InputData(unsigned char *fhr,unsigned char *toco, int len, NST_RESULT *pRet)
-{
-	time_t now;
-	now = time(NULL);
+{	
+	printf("enter inputData\n");
+	memset(tocoAddSpeed,0,sizeof(TOCOADDSPEED)*100);
+	memset(slowFhr,0,sizeof(SLOWFHR)*100);
+	memset(fastFhr,0,sizeof(FASTFHR)*100);
 	int fhr_JX = 0;	  //心率基线
 	int fhr_QV = 0;	  //周期变异
 	int fhr_ZV = 0;	  //振幅变异
@@ -43,7 +47,7 @@ static void InputData(unsigned char *fhr,unsigned char *toco, int len, NST_RESUL
 		unsigned char toco;
 		unsigned char fm; //0x02 - jiasu,0x08 - 减速
 	}SLINE;
-	typedef struct _fastFhr{
+	/*typedef struct _fastFhr{
 		INT maxPosX;
 		INT start;
 		INT end;
@@ -55,7 +59,7 @@ static void InputData(unsigned char *fhr,unsigned char *toco, int len, NST_RESUL
 		INT end;
 	}SLOWFHR;
 	SLOWFHR slowFhr[100] = {{0}};
-	FASTFHR fastFhr[100] = {{0}};
+	FASTFHR fastFhr[100] = {{0}};*/
 	SLINE sline[2400] = {{0}};
 	
 	int i, j, k;
@@ -102,50 +106,45 @@ static void InputData(unsigned char *fhr,unsigned char *toco, int len, NST_RESUL
 		if (count > 0)
 			fhr_JX = sum / count;
 	}
-	//宫压的加速(峰值、拐点)
-	typedef struct {
-		INT startPosX;//宫压开始加速位置
-		INT endPosX;///加速结束位置
-		INT maxPosX;//峰值位置
-		INT maxValue;//加速峰值
-		INT averageValue;//宫压基线。
-	}TOCOADDSPEED;
-	TOCOADDSPEED tocoAddSpeed[100] = {{0}};
+
 	{
-		INT MINTIME = 60;//加速最短时间阈值
-		INT MINDELTAVALUE = 20;//最小峰值阈值
+		INT MINTIME = 50;//加速最短时间阈值
+		INT MINDELTAVALUE = 18;//最小峰值阈值
 		INT start,end,max,maxValue;
 		INT addSpeedTime = 0;//宫压加速次数
 		INT squreToco = 0;//宫压加速积分
 		BOOL isAlwayUP = FALSE;
 		//宫压加速分析思路参考胎心加速的,把出现上升趋的点作为起点开始试探
 		//从而找出峰值，结束点
-		INT AVERAGEADDSPEEDTIME = 200;//200find one addspeed
-		for(i = 5; i < slinetc - AVERAGEADDSPEEDTIME; i++)
+		INT AVERAGEADDSPEEDTIME = 300;
+		for(i = 5; i < slinetc - 50;i++)
 		{	
 			start = i;
 			squreToco = end=max=maxValue= 0;
 			isAlwayUP = FALSE;
-			printf("cur i=%d\n",i);
+			//printf("cur i=%d\n",i);
 			//出现上升趋势 都和[i]比较避免锯齿带来的影响
 			if(sline[i + 2].toco > sline[i].toco + 1
 				&& sline[i + 1].toco > sline[i].toco
 				&& sline[i + 3].toco > sline[i].toco + 2)
 			{
+			//	printf("进来里面、\n");
 				for(j=i;j <i + AVERAGEADDSPEEDTIME;j++)
-				{
+				{	
+					if(j > slinetc - 50)
+						break;
 					if(maxValue <= sline[j].toco)//找峰值
 					{
 						maxValue = sline[j].toco;
 						max = j;
 					}
-					printf("i=%d ,j=%d maxValue=%d\n",i,j,maxValue);
+					//printf("i=%d ,j=%d maxValue=%d\n",i,j,maxValue);
 					squreToco += (sline[j].toco-sline[i].toco);
 					if(sline[i].toco > sline[j].toco)//找到加速结束时间,忽略加速过程有宫压调零发生
 					{
-					printf("oooooooooK %d %d (%d %d) squreToco=%d\n",maxValue,sline[i].toco,j,i,squreToco);
+	//printf("oooooooooK %d %d (%d %d) squreToco=%d\n",maxValue,sline[i].toco,j,i,squreToco);
 						if((maxValue-sline[i].toco>MINDELTAVALUE)&&(j-i>MINTIME)
-						 &&(squreToco>(j-i)*(maxValue-sline[i].toco)/2))
+						 &&(squreToco>(j-i)*(maxValue-sline[i].toco)*0.5*0.8)&&(squreToco<(j-i)*(maxValue-sline[i].toco)*0.9))
 						 {
 						 	tocoAddSpeed[addSpeedTime].startPosX = start;
 						 	tocoAddSpeed[addSpeedTime].endPosX = j;
@@ -167,15 +166,15 @@ static void InputData(unsigned char *fhr,unsigned char *toco, int len, NST_RESUL
 				}
 			}
 			if (isAlwayUP)
-				 i = i+AVERAGEADDSPEEDTIME/3;//i = j;会导致跳过部分加速尾段仍高于开始的情况
+				i = i+30;//加快查找速度
 		}
 		#if 1
 		for(i = 0 ;i < addSpeedTime;i++)
 		{
+			
 			printf("宫压%d加速from (%d,%d)(%d,%d)  Max=(%d,%d)\n",i+1,tocoAddSpeed[i].startPosX,tocoAddSpeed[i].averageValue,tocoAddSpeed[i].endPosX
 				,tocoAddSpeed[i].averageValue,tocoAddSpeed[i].maxPosX,tocoAddSpeed[i].maxValue);
 		}
-		printf("宫压加速次数%d \n",addSpeedTime);
 		#endif
 	}
 	
@@ -228,6 +227,7 @@ static void InputData(unsigned char *fhr,unsigned char *toco, int len, NST_RESUL
 							fastFhr[tdtc].start = i;
 							fastFhr[tdtc].end   = j;
 							fastFhr[tdtc].maxPosX = maxx;
+							fastFhr[tdtc].addValue = maxfhr;
 							i = j;
 							tdtc ++;
 							break;
@@ -249,10 +249,12 @@ static void InputData(unsigned char *fhr,unsigned char *toco, int len, NST_RESUL
 			fasthigh = fasthigh / (tdtc);
 		}
 		tdfast = tdtc;
-		for(i = 0;i < tdfast;i++)
+		#if 1
+		for(i = 0 ;i < tdfast;i++)
 		{
-			printf("第%d加速胎心 (%d,maxPosx=%d ,%d)\n",i,fastFhr[i].start ,fastFhr[i].maxPosX,fastFhr[i].end);
+			printf("胎心%d加速from (%d,%d,%d)\n",i+1,fastFhr[i].start,fastFhr[i].maxPosX,fastFhr[i].end);
 		}
+		#endif
 	}
 
 	//  分析减速
@@ -332,12 +334,13 @@ static void InputData(unsigned char *fhr,unsigned char *toco, int len, NST_RESUL
 			}
 		}
 		tdslow = tdtc;
-		for(i = 0;i < tdslow;i++)
+		#if 1
+		for(i = 0 ;i < tdslow;i++)
 		{
-			printf("第%d减速胎心 (%d,maxPosx =%d ,%d)\n",i,slowFhr[i].start ,slowFhr[i].maxPosX,slowFhr[i].end);
+			printf("胎心%d减速from (%d,%d,%d)\n",i+1,slowFhr[i].start,slowFhr[i].maxPosX,slowFhr[i].end);
 		}
+		#endif
 	}
-	printf("分析加速、减速和宫压的关系，得出其性质\n");
 /////分析加速、减速和宫压的关系，得出其性质
 	{
 		UCHAR cycleTime = 0;
@@ -347,46 +350,48 @@ static void InputData(unsigned char *fhr,unsigned char *toco, int len, NST_RESUL
 				break;
 			for(j=0;j<tdfast;j++)//加速
 			{
-				if(fastFhr[j].maxPosX == 0)
-					break;//已统计
+				if(fastFhr[j].addValue == -1)
+					continue;//已统计
+				if(fastFhr[j].end == 0)
+					break;//非加速
 				if(fastFhr[j].start > tocoAddSpeed[i].endPosX)
 					break;//加速和当前的宫压不存在关系
-				printf("是否周期性%d %d\n",(fastFhr[j].maxPosX>tocoAddSpeed[i].startPosX),(fastFhr[j].maxPosX<tocoAddSpeed[i].endPosX));
 				if((fastFhr[j].maxPosX>tocoAddSpeed[i].startPosX)&&(fastFhr[j].maxPosX<tocoAddSpeed[i].endPosX))//两峰相对	
 				{
-					printf("是周期性%d %d %d\n",j,fastFhr[j].start,fastFhr[j].end);
-					fastFhr[j].maxPosX = 0;
+					fastFhr[j].addValue= -1;
 					cycleTime++;
 					break;
 				}
 			}
 			for(j=0;j<tdslow;j++)//减速
 			{
+				
 				if(slowFhr[j].maxPosX == 0)
-					break;//已统计
+					break;//非减速
+				if(slowFhr[j].downValue == -1)
+					continue;//已统计
 				if(slowFhr[j].start-tocoAddSpeed[i].endPosX > 40)
 					break;//减速和当前的宫压不存在关系
 				//变异减速:下降大于70，与宫压无相关关系
 				if(slowFhr[j].downValue > 70 )
 				{
-					slowFhr[j].maxPosX = 0;
+					slowFhr[j].downValue = -1;
 					VDTime++;
 					break;
 				}
 				//早期减速:两峰两对，胎心下降不超50
-printf("是否早期减速:%d %d %d\n",j,fastFhr[j].maxPosX>tocoAddSpeed[i].startPosX,fastFhr[j].maxPosX<tocoAddSpeed[i].endPosX);
 			//	(slowFhr[j].maxPosX > tocoAddSpeed[i].startPosX)&&(slowFhr[j].maxPosX < tocoAddSpeed[i].endPosX
 				if((slowFhr[j].maxPosX > tocoAddSpeed[i].startPosX)&&(slowFhr[j].maxPosX < tocoAddSpeed[i].endPosX)
 					&& (slowFhr[j].downValue < 50))
 				{
-					slowFhr[j].maxPosX = 0;
+					slowFhr[j].downValue = -1;
 					EDTime++;
 					break;
 				}
 				//晚期减速:胎心下降在宫压峰值后，两峰相差30-60秒，胎心落后宫压，胎心下降不超50
 				if((slowFhr[j].maxPosX > tocoAddSpeed[i].endPosX)&& (slowFhr[j].downValue < 50))
 				{
-					slowFhr[j].maxPosX = 0;
+					slowFhr[j].downValue = -1;
 					LDTime++;
 					break;
 				}
@@ -575,6 +580,7 @@ printf("是否早期减速:%d %d %d\n",j,fastFhr[j].maxPosX>tocoAddSpeed[i].startPosX,
 	pRet->LDTime = LDTime;	  //晚期减速
 	pRet->EDTime = EDTime;	  //早期减速
 	pRet->VDTime = VDTime;	  //vd数
+	printf("exit inputData\n");
 }		
 
 
@@ -686,14 +692,14 @@ BOOL CstAnalyInProc(VOID)
 	sFhrDiagnose.nr_valid = (INT16)AnalyConfig.nr_valid;
 	AnalyConfig.putFlag = FALSE;
 	sFhrDiagnose.UsedFlag = TRUE;
-	printf("\n\t心率基线:\t%d\n\t周期变异:\t%d\n\t振幅变异:\t\%d",
+	/*printf("\n\t心率基线:\t%d\n\t周期变异:\t%d\n\t振幅变异:\t\%d",
 		sNST.fhr_JX, sNST.fhr_QV, sNST.fhr_ZV);
 	printf("\n\t加速时间:\t%d\n\t加速幅度:\t%d" , sNST.fasttime, sNST.fasthigh);
 	printf("\n\t加速次数:\t%d\n\t减速次数:\t%d\n" , sNST.tdfast, sNST.tdslow);
 	printf("AnlsRet.second...%d\r\n", AnlsRet.second);
 	printf("加速类型=%d，减速类型=%d,晚期减速%d,早期减速%d vd数%d\n",
 		sNST.fastType, sNST.slowType, sNST.LDTime, sNST.EDTime, sNST.VDTime);
-	printf("打评分各个指标2015-05-25\n");
+	printf("打评分各个指标2015-05-25\n");*/
 	return TRUE;
 }
 
@@ -1189,15 +1195,20 @@ INT32 AnalyDlgProc (HWND hWnd, INT32 message, WPARAM wParam, LPARAM lParam)
 					return 0;
 
 				case IDC_ANALY_SETUP_DONE_B:
+					printf("执行评分11111\n");
 					if (!AnalyConfig.sendFlag)
-					{
+					{printf("执行评分2222\n");
 						EndPatientFile();
+						printf("执行评分3333\n");
 						SetAnalyDlgCtrlStatus(hWnd);
+						printf("执行评分4444\n");
 						shAnalyDlg = 0;
 						MessageBox(hWnd, STR_MSGBOX_PRO_ANALY, 0,
 									((PWIN)hWnd)->caption, 
 									MB_ALIGNCENTER | MB_OK, SysGui_HTSK);
+									printf("执行评分5555\n");
 						EndDialog(hWnd, IDOK);
+						printf("执行评分66666\n");
 					}
 					return 0;
 

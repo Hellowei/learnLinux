@@ -139,7 +139,7 @@ extern  char DebugSupportDevice;
 
 #define	_ENB_NET_THREAD		   1
 	#if	_ENB_NET_THREAD
-		#define _ENB_NET_SEND_ALARM_INFO	0
+		#define _ENB_NET_SEND_ALARM_INFO	1//修改这里一定要和中央站协议对应起来
 	#endif
 
 // how long one time Tick is ?  unit: ms

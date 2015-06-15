@@ -91,7 +91,6 @@ char  DebugSupportDevice = 0;
 *******************************************************************************/
 int main(int argc,char *argv[])
 {
-	printf("add ++++++++++\n");
 	int	rtn = 0;
 	if (argc == 2)
 	{

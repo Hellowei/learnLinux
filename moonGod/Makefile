@@ -32,7 +32,7 @@ $(GUI_PROGRAM): $(GUI_OBJS)
 	$(STRIP) $(GUI_PROGRAM)
 
 	cp -f $(GUI_PROGRAM)  /mnt/nfs
-
+	cp -f $(GUI_PROGRAM)  /home/phh/test
 clean:
 	rm -rf $(OBJDIR)
 	rm -rf $(GUI_PROGRAM)

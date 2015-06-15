@@ -31,7 +31,7 @@ typedef enum _module_cmd_message
 }MSG_PRTCL_ID;
 
 #define ALLCOMM_LEN_MIN	 6			   //单个包的最小允许长度
-#define ALLCOMM_LEN_MAX	 (4 + 256 + 2)   //单个包的最长允许长度(Len:0~0xFF)
+#define ALLCOMM_LEN_MAX	 (4 + 256 + 4)   //单个包的最长允许长度(Len:0~0xFF)
 #define MDL_RECE_MAX_LEN	4096			//ALLCOMM_LEN_MAX
 
 typedef union {  
@@ -43,6 +43,8 @@ typedef union {
 		UINT8 data[256];
 		UINT8 chksum;
 		UINT8 end;
+		UINT8 isNeedTocoAmend;//是否需要修正宫压放大倍数
+		UINT8 tocoEnd;///宫压放大倍数结尾标志
 	} __attribute__ ((packed, aligned(1))) frame;
 	UINT8 buffer[ALLCOMM_LEN_MAX];
 }   __attribute__ ((packed, aligned(1))) PACKETFRAME;

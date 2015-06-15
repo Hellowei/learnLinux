@@ -824,7 +824,7 @@ INT32 gdi_put_strnEx (HDC hdc, INT32 x, INT32 y, const CHAR* text, INT32 len)
     }
     return x - origx;
 }
-
+extern BOOL g_eventMark,g_changeSpeed;
 INT32 GUIAPI TextOutLen (HDC hdc, INT32 x, INT32 y, const CHAR* text, INT32 len)
 {
 	PDC	pdc;
@@ -845,8 +845,16 @@ INT32 GUIAPI TextOutLen (HDC hdc, INT32 x, INT32 y, const CHAR* text, INT32 len)
         
     }
     
-	pdc = dc_HDC2PDC(hdc);
-
+ 	pdc = dc_HDC2PDC(hdc);
+ 	//改变画刷目的避免改变打印速度时事件文字出现一团白点
+	if(g_eventMark && g_changeSpeed)//事件且又变速的情况下，改变画刷 @VinYin 2015-05-22
+	{
+		pdc->bkcolor = 1;
+		pdc->textcolor = -1;
+		pdc->pencolor = 1;
+		pdc->brushcolor = 1;
+	}
+	
 	coor_LP2SP(pdc, &x, &y); // Transfer logical to device to screen here.
 
 	if (!PtInRect(&pdc->DevRC, x, y) ||
@@ -866,7 +874,7 @@ INT32 GUIAPI TextOutLen (HDC hdc, INT32 x, INT32 y, const CHAR* text, INT32 len)
 
 		if (IsCovered(&pdc->DevRC, &rcOutput))  
 			break;//输出范围在在DC的窗口内,出循环;
-			
+		
 		len --;
 	}
 	if (len > 0)

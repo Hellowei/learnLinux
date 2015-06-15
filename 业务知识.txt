@@ -6,3 +6,4 @@ RESP：呼吸频率
 TEMP:体温
 pulse:脉博，心率
 ETCO2:呼末CO2浓度
+INCO2:吸入CO2浓度
