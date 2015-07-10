@@ -7,3 +7,5 @@ TEMP:体温
 pulse:脉博，心率
 ETCO2:呼末CO2浓度
 INCO2:吸入CO2浓度
+收缩压(SYS) 平均动脉压 舒张压(DIA)
+
