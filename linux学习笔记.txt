@@ -66,4 +66,10 @@ tftp -l data.tar -r data3.tar -p 192.168.1.210 利用tftp把开发板上data.tar 文件传
 
 grep "201507161700" ./* 在所有文件查找字符串 201507161700
 
+makefile 相关知识
+makefile文件由一组依赖关系和规则构成。
+make 会默认执行了当前目录的makefile或Makefile 
+make -f makefile_name 指定执行了当前目录的makefile_name
+makefile 一般格式是 目录名：依赖文件。以#为行注释，
+
 
