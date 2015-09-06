@@ -1,5 +1,6 @@
 #include "stdio.h"
 
+#define FIELD_OFFSET(type, field)	((int)&(((type *)0)->field))
 #define BOOL int
 #define MAX_DATA_LEN 64
 typedef struct _file_info
@@ -24,8 +25,9 @@ typedef struct _file
 {
 	FILE_INFO fileInfo;
 	FILE_DATA fileData;
-}FILE_DATA,*P_FILE_DATA;
+}MY_FILE,*P_MY_FILE;
 
 int set_file_size(int fd, long size);
-
+int WriteFileInfo(FILE* fp,FILE_INFO file_info);
+int WriteFileData(FILE* fp,FILE_ONE_DATA file_data);
 
