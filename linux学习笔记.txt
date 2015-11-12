@@ -67,7 +67,7 @@ tftp -l data.tar -r data3.tar -p 192.168.1.210 利用tftp把开发板上data.tar 文件传
 grep "201507161700" ./* 在所有文件查找字符串 201507161700
 watch -n 1 ifconfig eth0 查看网络接口
 
-
+cd /proc/scsi ;cat scsi  查看u盘是否识别
 
 makefile 相关知识
 makefile文件由一组依赖关系和规则构成。
