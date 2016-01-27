@@ -57,7 +57,8 @@ tar xf + 压缩的文件名 //可解压到当前目录
 tar cvf 压缩包名 目录名 //可压缩
 killall xx 杀掉所有XX进程
 kill id 杀掉进程id
-ps  查看当前进程
+ps -el  查看当前进程状态 R runing Z zombie S sleeping
+
 /m1000/m1000 & 后台方式执行m1000
 cp /mnt/data/data.2* data/  把/mnt/data/下所有文件名为data.2XX的文件全部拷到 当前目录下的data/
 tar cvf data.tar data  把data下所有文件压缩成为data.tar        //tar -cvf jpg.tar *.jpg 将目录里所有jpg文件打包成tar.jpg
@@ -66,8 +67,9 @@ tftp -l data.tar -r data3.tar -p 192.168.1.210 利用tftp把开发板上data.tar 文件传
 
 grep "201507161700" ./* 在所有文件查找字符串 201507161700
 watch -n 1 ifconfig eth0 查看网络接口
-
+watch -n 30 free //30s查看一次内存情况
 cd /proc/scsi ;cat scsi  查看u盘是否识别
+find / -name fileName 查找文件名为fileName的文件
 
 makefile 相关知识
 makefile文件由一组依赖关系和规则构成。
