@@ -1,4 +1,0 @@
-
-#define COLORDLG_GLOBALS
-
-
