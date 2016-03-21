@@ -63,6 +63,7 @@ ps -el  查看当前进程状态 R runing Z zombie S sleeping
 cp /mnt/data/data.2* data/  把/mnt/data/下所有文件名为data.2XX的文件全部拷到 当前目录下的data/
 tar cvf data.tar data  把data下所有文件压缩成为data.tar        //tar -cvf jpg.tar *.jpg 将目录里所有jpg文件打包成tar.jpg
 tar xf ../data3.tar  解压data3.tar
+unzip  data3.zip 解压data3.zip
 tftp -l data.tar -r data3.tar -p 192.168.1.210 利用tftp把开发板上data.tar 文件传到主机192.168.1.210上并命名为data3.tar
 
 grep "201507161700" ./* 在所有文件查找字符串 201507161700
